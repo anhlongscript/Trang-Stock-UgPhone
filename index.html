@@ -2,72 +2,779 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Trạng thái UgPhone</title>
+  <title>UGPhone Stock</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body {
       font-family: Arial, sans-serif;
-      margin: 20px;
-      background-color: #f4f4f9;
+      background-color: #111;
+      color: #eee;
+      padding: 20px;
     }
+
     h1 {
-      color: #333;
+      text-align: center;
+      margin-bottom: 20px;
+      color: #0f0;
     }
-    #ugphone-status {
-      margin-top: 20px;
-      padding: 10px;
-      background-color: #fff;
-      border-radius: 5px;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+
+    /* Box Stock */
+    #stock-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 30px;
+      justify-content: center;
     }
-    .service {
-      margin-bottom: 10px;
+
+    .link-box {
+      background-color: #222;
+      padding: 10px 15px;
+      border-radius: 8px;
+      transition: 0.3s;
     }
-    .service span {
+
+    .link-box a {
+      text-decoration: none;
+      color: #0f0;
       font-weight: bold;
     }
-    .online {
-      color: green;
+
+    .link-box:hover {
+      background-color: #333;
     }
-    .offline {
-      color: red;
+
+    /* Table Stock */
+    table {
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+      border-collapse: collapse;
+      background-color: #222;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: center;
+      border-bottom: 1px solid #333;
+    }
+
+    th {
+      background-color: #333;
+      color: #0f0;
+    }
+
+    tr:nth-child(even) {
+      background-color: #1a1a1a;
+    }
+
+    tr:hover {
+      background-color: #444;
+    }
+
+    td {
+      color: #eee;
     }
   </style>
 </head>
 <body>
-  <h1>Trạng thái dịch vụ UgPhone</h1>
-  <div id="ugphone-status">Đang tải...</div>
+
+  <h1>UGPhone Stock</h1>
+
+  <!-- Box hiển thị stock -->
+  <div id="stock-container"></div>
+
+  <!-- Table hiển thị stock chi tiết -->
+  <table id="stock-table">
+    <thead>
+      <tr>
+        <th>Server</th>
+        <th>Trạng thái</th>
+        <th>Uptime</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- JS sẽ chèn dữ liệu vào đây -->
+    </tbody>
+  </table>
 
   <script>
-    // Hàm lấy trạng thái từ API
-    function fetchUgPhoneStatus() {
-      fetch("https://meows.io.vn/call-ugphone-status") // Thay bằng URL thật nếu cần
-        .then(res => res.json())
-        .then(data => {
-          const statusDiv = document.getElementById("ugphone-status");
-          let html = "";
-          data.services.forEach(service => {
-            const statusClass = service.status === 'online' ? 'online' : 'offline';
-            html += `
-              <div class="service">
-                <span>${service.name}:</span>
-                <span class="${statusClass}">${service.status}</span>
-              </div>
-            `;
+    async function loadStock() {
+      try {
+        const response = await fetch('https://meows.io.vn/call-ugphone-status');
+        const data = await response.json();
+
+        // Cập nhật box stock
+        const container = document.getElementById('stock-container');
+        container.innerHTML = '';
+        for (const item of data) {
+          const box = document.createElement('div');
+          box.className = 'link-box';
+          const link = document.createElement('a');
+          link.textContent = `${item.name} - ${item.stock} còn`;
+          box.appendChild(link);
+          container.appendChild(box);
+        }
+
+        // Cập nhật table stock
+        const tbody = document.querySelector('#stock-table tbody');
+        tbody.innerHTML = '';
+        if (data.status) {
+          data.status.forEach(item => {
+            const tr = document.createElement('tr');
+            const tdServer = document.createElement('td');
+            tdServer.textContent = item.split('|')[0].trim();
+
+            const tdStatus = document.createElement('td');
+            if (item.includes('🟢')) tdStatus.textContent = '🟢 Còn máy';
+            else if (item.includes('🔴')) tdStatus.textContent = '🔴 Hết máy';
+            else tdStatus.textContent = '❌ Lỗi';
+
+            const tdUptime = document.createElement('td');
+            tdUptime.textContent = item.split('Uptime:')[1] ? item.split('Uptime:')[1].trim() : '-';
+
+            tr.appendChild(tdServer);
+            tr.appendChild(tdStatus);
+            tr.appendChild(tdUptime);
+            tbody.appendChild(tr);
           });
-          statusDiv.innerHTML = html;
-        })
-        .catch(err => {
-          console.error(err);
-          document.getElementById("ugphone-status").innerText = "Không thể tải trạng thái.";
-        });
+        }
+
+      } catch (e) {
+        console.error('Không thể load stock', e);
+      }
     }
 
-    // Cập nhật trạng thái mỗi giây
-    setInterval(fetchUgPhoneStatus, 1000);
-
-    // Tải trạng thái ngay khi trang được tải
-    window.onload = fetchUgPhoneStatus;
+    // Load ngay lập tức và cập nhật mỗi 1 giây
+    loadStock();
+    setInterval(loadStock, 1000);
   </script>
+
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>UGPhone Stock</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #111;
+      color: #eee;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #0f0;
+    }
+
+    /* Box Stock */
+    #stock-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 30px;
+      justify-content: center;
+    }
+
+    .link-box {
+      background-color: #222;
+      padding: 10px 15px;
+      border-radius: 8px;
+      transition: 0.3s;
+    }
+
+    .link-box a {
+      text-decoration: none;
+      color: #0f0;
+      font-weight: bold;
+    }
+
+    .link-box:hover {
+      background-color: #333;
+    }
+
+    /* Table Stock */
+    table {
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+      border-collapse: collapse;
+      background-color: #222;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: center;
+      border-bottom: 1px solid #333;
+    }
+
+    th {
+      background-color: #333;
+      color: #0f0;
+    }
+
+    tr:nth-child(even) {
+      background-color: #1a1a1a;
+    }
+
+    tr:hover {
+      background-color: #444;
+    }
+
+    td {
+      color: #eee;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>UGPhone Stock</h1>
+
+  <!-- Box hiển thị stock -->
+  <div id="stock-container"></div>
+
+  <!-- Table hiển thị stock chi tiết -->
+  <table id="stock-table">
+    <thead>
+      <tr>
+        <th>Server</th>
+        <th>Trạng thái</th>
+        <th>Uptime</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- JS sẽ chèn dữ liệu vào đây -->
+    </tbody>
+  </table>
+
+  <script>
+    async function loadStock() {
+      try {
+        const response = await fetch('https://meows.io.vn/call-ugphone-status');
+        const data = await response.json();
+
+        // Cập nhật box stock
+        const container = document.getElementById('stock-container');
+        container.innerHTML = '';
+        for (const item of data) {
+          const box = document.createElement('div');
+          box.className = 'link-box';
+          const link = document.createElement('a');
+          link.textContent = `${item.name} - ${item.stock} còn`;
+          box.appendChild(link);
+          container.appendChild(box);
+        }
+
+        // Cập nhật table stock
+        const tbody = document.querySelector('#stock-table tbody');
+        tbody.innerHTML = '';
+        if (data.status) {
+          data.status.forEach(item => {
+            const tr = document.createElement('tr');
+            const tdServer = document.createElement('td');
+            tdServer.textContent = item.split('|')[0].trim();
+
+            const tdStatus = document.createElement('td');
+            if (item.includes('🟢')) tdStatus.textContent = '🟢 Còn máy';
+            else if (item.includes('🔴')) tdStatus.textContent = '🔴 Hết máy';
+            else tdStatus.textContent = '❌ Lỗi';
+
+            const tdUptime = document.createElement('td');
+            tdUptime.textContent = item.split('Uptime:')[1] ? item.split('Uptime:')[1].trim() : '-';
+
+            tr.appendChild(tdServer);
+            tr.appendChild(tdStatus);
+            tr.appendChild(tdUptime);
+            tbody.appendChild(tr);
+          });
+        }
+
+      } catch (e) {
+        console.error('Không thể load stock', e);
+      }
+    }
+
+    // Load ngay lập tức và cập nhật mỗi 1 giây
+    loadStock();
+    setInterval(loadStock, 1000);
+  </script>
+
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>UGPhone Stock</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #111;
+      color: #eee;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #0f0;
+    }
+
+    /* Box Stock */
+    #stock-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 30px;
+      justify-content: center;
+    }
+
+    .link-box {
+      background-color: #222;
+      padding: 10px 15px;
+      border-radius: 8px;
+      transition: 0.3s;
+    }
+
+    .link-box a {
+      text-decoration: none;
+      color: #0f0;
+      font-weight: bold;
+    }
+
+    .link-box:hover {
+      background-color: #333;
+    }
+
+    /* Table Stock */
+    table {
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+      border-collapse: collapse;
+      background-color: #222;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: center;
+      border-bottom: 1px solid #333;
+    }
+
+    th {
+      background-color: #333;
+      color: #0f0;
+    }
+
+    tr:nth-child(even) {
+      background-color: #1a1a1a;
+    }
+
+    tr:hover {
+      background-color: #444;
+    }
+
+    td {
+      color: #eee;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>UGPhone Stock</h1>
+
+  <!-- Box hiển thị stock -->
+  <div id="stock-container"></div>
+
+  <!-- Table hiển thị stock chi tiết -->
+  <table id="stock-table">
+    <thead>
+      <tr>
+        <th>Server</th>
+        <th>Trạng thái</th>
+        <th>Uptime</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- JS sẽ chèn dữ liệu vào đây -->
+    </tbody>
+  </table>
+
+  <script>
+    async function loadStock() {
+      try {
+        const response = await fetch('https://meows.io.vn/call-ugphone-status');
+        const data = await response.json();
+
+        // Cập nhật box stock
+        const container = document.getElementById('stock-container');
+        container.innerHTML = '';
+        for (const item of data) {
+          const box = document.createElement('div');
+          box.className = 'link-box';
+          const link = document.createElement('a');
+          link.textContent = `${item.name} - ${item.stock} còn`;
+          box.appendChild(link);
+          container.appendChild(box);
+        }
+
+        // Cập nhật table stock
+        const tbody = document.querySelector('#stock-table tbody');
+        tbody.innerHTML = '';
+        if (data.status) {
+          data.status.forEach(item => {
+            const tr = document.createElement('tr');
+            const tdServer = document.createElement('td');
+            tdServer.textContent = item.split('|')[0].trim();
+
+            const tdStatus = document.createElement('td');
+            if (item.includes('🟢')) tdStatus.textContent = '🟢 Còn máy';
+            else if (item.includes('🔴')) tdStatus.textContent = '🔴 Hết máy';
+            else tdStatus.textContent = '❌ Lỗi';
+
+            const tdUptime = document.createElement('td');
+            tdUptime.textContent = item.split('Uptime:')[1] ? item.split('Uptime:')[1].trim() : '-';
+
+            tr.appendChild(tdServer);
+            tr.appendChild(tdStatus);
+            tr.appendChild(tdUptime);
+            tbody.appendChild(tr);
+          });
+        }
+
+      } catch (e) {
+        console.error('Không thể load stock', e);
+      }
+    }
+
+    // Load ngay lập tức và cập nhật mỗi 1 giây
+    loadStock();
+    setInterval(loadStock, 1000);
+  </script>
+
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>UGPhone Stock</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #111;
+      color: #eee;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #0f0;
+    }
+
+    /* Box Stock */
+    #stock-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 30px;
+      justify-content: center;
+    }
+
+    .link-box {
+      background-color: #222;
+      padding: 10px 15px;
+      border-radius: 8px;
+      transition: 0.3s;
+    }
+
+    .link-box a {
+      text-decoration: none;
+      color: #0f0;
+      font-weight: bold;
+    }
+
+    .link-box:hover {
+      background-color: #333;
+    }
+
+    /* Table Stock */
+    table {
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+      border-collapse: collapse;
+      background-color: #222;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: center;
+      border-bottom: 1px solid #333;
+    }
+
+    th {
+      background-color: #333;
+      color: #0f0;
+    }
+
+    tr:nth-child(even) {
+      background-color: #1a1a1a;
+    }
+
+    tr:hover {
+      background-color: #444;
+    }
+
+    td {
+      color: #eee;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>UGPhone Stock</h1>
+
+  <!-- Box hiển thị stock -->
+  <div id="stock-container"></div>
+
+  <!-- Table hiển thị stock chi tiết -->
+  <table id="stock-table">
+    <thead>
+      <tr>
+        <th>Server</th>
+        <th>Trạng thái</th>
+        <th>Uptime</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- JS sẽ chèn dữ liệu vào đây -->
+    </tbody>
+  </table>
+
+  <script>
+    async function loadStock() {
+      try {
+        const response = await fetch('https://meows.io.vn/call-ugphone-status');
+        const data = await response.json();
+
+        // Cập nhật box stock
+        const container = document.getElementById('stock-container');
+        container.innerHTML = '';
+        for (const item of data) {
+          const box = document.createElement('div');
+          box.className = 'link-box';
+          const link = document.createElement('a');
+          link.textContent = `${item.name} - ${item.stock} còn`;
+          box.appendChild(link);
+          container.appendChild(box);
+        }
+
+        // Cập nhật table stock
+        const tbody = document.querySelector('#stock-table tbody');
+        tbody.innerHTML = '';
+        if (data.status) {
+          data.status.forEach(item => {
+            const tr = document.createElement('tr');
+            const tdServer = document.createElement('td');
+            tdServer.textContent = item.split('|')[0].trim();
+
+            const tdStatus = document.createElement('td');
+            if (item.includes('🟢')) tdStatus.textContent = '🟢 Còn máy';
+            else if (item.includes('🔴')) tdStatus.textContent = '🔴 Hết máy';
+            else tdStatus.textContent = '❌ Lỗi';
+
+            const tdUptime = document.createElement('td');
+            tdUptime.textContent = item.split('Uptime:')[1] ? item.split('Uptime:')[1].trim() : '-';
+
+            tr.appendChild(tdServer);
+            tr.appendChild(tdStatus);
+            tr.appendChild(tdUptime);
+            tbody.appendChild(tr);
+          });
+        }
+
+      } catch (e) {
+        console.error('Không thể load stock', e);
+      }
+    }
+
+    // Load ngay lập tức và cập nhật mỗi 1 giây
+    loadStock();
+    setInterval(loadStock, 1000);
+  </script>
+
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>UGPhone Stock</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #111;
+      color: #eee;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #0f0;
+    }
+
+    /* Box Stock */
+    #stock-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 30px;
+      justify-content: center;
+    }
+
+    .link-box {
+      background-color: #222;
+      padding: 10px 15px;
+      border-radius: 8px;
+      transition: 0.3s;
+    }
+
+    .link-box a {
+      text-decoration: none;
+      color: #0f0;
+      font-weight: bold;
+    }
+
+    .link-box:hover {
+      background-color: #333;
+    }
+
+    /* Table Stock */
+    table {
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+      border-collapse: collapse;
+      background-color: #222;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: center;
+      border-bottom: 1px solid #333;
+    }
+
+    th {
+      background-color: #333;
+      color: #0f0;
+    }
+
+    tr:nth-child(even) {
+      background-color: #1a1a1a;
+    }
+
+    tr:hover {
+      background-color: #444;
+    }
+
+    td {
+      color: #eee;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>UGPhone Stock</h1>
+
+  <!-- Box hiển thị stock -->
+  <div id="stock-container"></div>
+
+  <!-- Table hiển thị stock chi tiết -->
+  <table id="stock-table">
+    <thead>
+      <tr>
+        <th>Server</th>
+        <th>Trạng thái</th>
+        <th>Uptime</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- JS sẽ chèn dữ liệu vào đây -->
+    </tbody>
+  </table>
+
+  <script>
+    async function loadStock() {
+      try {
+        const response = await fetch('https://meows.io.vn/call-ugphone-status');
+        const data = await response.json();
+
+        // Cập nhật box stock
+        const container = document.getElementById('stock-container');
+        container.innerHTML = '';
+        for (const item of data) {
+          const box = document.createElement('div');
+          box.className = 'link-box';
+          const link = document.createElement('a');
+          link.textContent = `${item.name} - ${item.stock} còn`;
+          box.appendChild(link);
+          container.appendChild(box);
+        }
+
+        // Cập nhật table stock
+        const tbody = document.querySelector('#stock-table tbody');
+        tbody.innerHTML = '';
+        if (data.status) {
+          data.status.forEach(item => {
+            const tr = document.createElement('tr');
+            const tdServer = document.createElement('td');
+            tdServer.textContent = item.split('|')[0].trim();
+
+            const tdStatus = document.createElement('td');
+            if (item.includes('🟢')) tdStatus.textContent = '🟢 Còn máy';
+            else if (item.includes('🔴')) tdStatus.textContent = '🔴 Hết máy';
+            else tdStatus.textContent = '❌ Lỗi';
+
+            const tdUptime = document.createElement('td');
+            tdUptime.textContent = item.split('Uptime:')[1] ? item.split('Uptime:')[1].trim() : '-';
+
+            tr.appendChild(tdServer);
+            tr.appendChild(tdStatus);
+            tr.appendChild(tdUptime);
+            tbody.appendChild(tr);
+          });
+        }
+
+      } catch (e) {
+        console.error('Không thể load stock', e);
+      }
+    }
+
+    // Load ngay lập tức và cập nhật mỗi 1 giây
+    loadStock();
+    setInterval(loadStock, 1000);
+  </script>
+
 </body>
 </html>
