@@ -6,19 +6,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
 html, body {
-  margin:0; padding:0; height:100%; font-family: Arial, sans-serif; background:#000; color:#eee; overflow-x:hidden;
+  margin:0; padding:0; height:100%; font-family: Arial, sans-serif; overflow-x:hidden; background:#000; color:#fff;
 }
 
 /* Video nền */
-#video-bg {
-  position: fixed; inset:0; width:100%; height:100%; object-fit:cover; z-index:-1;
-  filter: blur(4px) brightness(0.6);
+#player {
+  position:fixed; inset:0; width:100%; height:100%; z-index:-1; pointer-events:none;
+  filter:blur(4px) brightness(0.6);
 }
 
 /* Nội dung */
 .content { position:relative; z-index:1; text-align:center; padding:40px 20px; color:#fff; }
 .content h1 { font-size:48px; font-weight:900; text-shadow:2px 2px 10px rgba(0,0,0,0.8); margin-bottom:10px; color:#ff0; }
-.note { font-size:14px; color:#ff0000; font-weight:bold; margin-bottom:12px; }
+.note { font-size:14px; color:#f00; font-weight:bold; margin-bottom:12px; }
 
 /* Bảng stock */
 table { width:90%; max-width:700px; margin:20px auto; border-collapse:collapse; background: rgba(0,0,0,0.6); border-radius:12px; font-size:1.2em; }
@@ -46,23 +46,13 @@ tr:hover { background: rgba(255,255,0,0.2); }
   border-radius:8px; cursor:pointer; font-size:16px; transition:background 0.2s;
 }
 .sound-btn:hover { background: rgba(0,0,0,0.8); }
-
-/* Responsive */
-@media(max-width:640px){
-  .content h1{ font-size:34px; }
-  table{ font-size:1em; }
-  .sound-btn{ font-size:14px; padding:8px 16px; }
-}
 </style>
 </head>
 <body>
 
-<!-- Video nền MP4 -->
-<video autoplay muted loop id="video-bg">
-  <source src="video.mp4" type="video/mp4">
-</video>
+<!-- Video YouTube nền -->
+<div id="player"></div>
 
-<!-- Nội dung -->
 <div class="content">
   <h1>📊 UGPhone Stock</h1>
   <p class="note">Cập nhật theo API UgPhone</p>
@@ -80,18 +70,36 @@ tr:hover { background: rgba(255,255,0,0.2); }
   <button class="sound-btn" onclick="toggleSound()">🔊 Bật tiếng</button>
 </div>
 
+<!-- YouTube IFrame API -->
+<script src="https://www.youtube.com/iframe_api"></script>
 <script>
-const video = document.getElementById("video-bg");
-let isMuted = true;
-
-function toggleSound() {
-  video.muted = !video.muted;
-  document.querySelector(".sound-btn").innerText = video.muted ? "🔊 Bật tiếng" : "🔇 Tắt tiếng";
+let player;
+function onYouTubeIframeAPIReady() {
+  player = new YT.Player('player', {
+    videoId: 'Sas3Tw_FpnA',
+    playerVars: {
+      autoplay: 1,
+      controls: 0,
+      loop: 1,
+      playlist: 'Sas3Tw_FpnA',
+      modestbranding: 1,
+      mute: 1
+    },
+    events: {
+      'onReady': e => e.target.mute()
+    }
+  });
 }
 
-// Lưu trạng thái cũ để so sánh
-let oldStatuses = {};
+function toggleSound(){
+  if(player.isMuted()){ player.unMute(); document.querySelector('.sound-btn').innerText='🔇 Tắt tiếng'; }
+  else { player.mute(); document.querySelector('.sound-btn').innerText='🔊 Bật tiếng'; }
+}
+</script>
 
+<!-- Stock Script -->
+<script>
+let oldStatuses = {};
 async function loadStock() {
   try {
     const res = await fetch('https://meows.io.vn/call-ugphone-status');
@@ -99,8 +107,8 @@ async function loadStock() {
     const tbody = document.querySelector('#stock-table tbody');
     tbody.innerHTML = '';
 
-    if (data.success && Array.isArray(data.status)) {
-      data.status.forEach(line => {
+    if(data.success && Array.isArray(data.status)){
+      data.status.forEach(line=>{
         if(line.includes('Uptime') || line.includes('Trang thái')) return;
         const parts = line.split(':');
         if(parts.length<2) return;
@@ -113,14 +121,9 @@ async function loadStock() {
         else if(statusEmoji.includes('🔴')) { statusText='🔴 Hết máy'; statusClass='red'; }
 
         const tr = document.createElement('tr');
-        const tdServer = document.createElement('td');
-        tdServer.textContent = serverName;
-        tdServer.className='server';
-        const tdStatus = document.createElement('td');
-        tdStatus.textContent=statusText;
-        tdStatus.className='status '+statusClass;
+        const tdServer = document.createElement('td'); tdServer.textContent=serverName; tdServer.className='server';
+        const tdStatus = document.createElement('td'); tdStatus.textContent=statusText; tdStatus.className='status '+statusClass;
 
-        // Animation highlight khi thay đổi
         if(oldStatuses[serverName] && oldStatuses[serverName] !== statusText){
           tdStatus.classList.add('changed');
           setTimeout(()=> tdStatus.classList.remove('changed'),1000);
