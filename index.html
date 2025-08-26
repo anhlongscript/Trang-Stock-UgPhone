@@ -92,7 +92,6 @@
       <tr>
         <th>Server</th>
         <th>Trạng thái</th>
-        <th>Uptime</th>
       </tr>
     </thead>
     <tbody>
@@ -109,35 +108,32 @@
         // Cập nhật box stock
         const container = document.getElementById('stock-container');
         container.innerHTML = '';
-        for (const item of data) {
-          const box = document.createElement('div');
-          box.className = 'link-box';
-          const link = document.createElement('a');
-          link.textContent = `${item.name} - ${item.stock} còn`;
-          box.appendChild(link);
-          container.appendChild(box);
+        if (data && Array.isArray(data)) {
+          data.forEach(item => {
+            const box = document.createElement('div');
+            box.className = 'link-box';
+            const link = document.createElement('a');
+            link.textContent = `${item.name} - ${item.stock} còn`;
+            box.appendChild(link);
+            container.appendChild(box);
+          });
         }
 
         // Cập nhật table stock
         const tbody = document.querySelector('#stock-table tbody');
         tbody.innerHTML = '';
-        if (data.status) {
-          data.status.forEach(item => {
+        if (data && Array.isArray(data)) {
+          data.forEach(item => {
             const tr = document.createElement('tr');
             const tdServer = document.createElement('td');
-            tdServer.textContent = item.split('|')[0].trim();
+            tdServer.textContent = item.name;
 
             const tdStatus = document.createElement('td');
-            if (item.includes('🟢')) tdStatus.textContent = '🟢 Còn máy';
-            else if (item.includes('🔴')) tdStatus.textContent = '🔴 Hết máy';
-            else tdStatus.textContent = '❌ Lỗi';
-
-            const tdUptime = document.createElement('td');
-            tdUptime.textContent = item.split('Uptime:')[1] ? item.split('Uptime:')[1].trim() : '-';
+            if (item.stock > 0) tdStatus.textContent = '🟢 Còn máy';
+            else tdStatus.textContent = '🔴 Hết máy';
 
             tr.appendChild(tdServer);
             tr.appendChild(tdStatus);
-            tr.appendChild(tdUptime);
             tbody.appendChild(tr);
           });
         }
