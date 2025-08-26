@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trạng thái UgPhone</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #f4f4f9;
+    }
+    h1 {
+      color: #333;
+    }
+    #ugphone-status {
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #fff;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    .service {
+      margin-bottom: 10px;
+    }
+    .service span {
+      font-weight: bold;
+    }
+    .online {
+      color: green;
+    }
+    .offline {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <h1>Trạng thái dịch vụ UgPhone</h1>
+  <div id="ugphone-status">Đang tải...</div>
+
+  <script>
+    // Hàm lấy trạng thái từ API
+    function fetchUgPhoneStatus() {
+      fetch("https://meows.io.vn/call-ugphone-status") // Thay bằng URL thật nếu cần
+        .then(res => res.json())
+        .then(data => {
+          const statusDiv = document.getElementById("ugphone-status");
+          let html = "";
+          data.services.forEach(service => {
+            const statusClass = service.status === 'online' ? 'online' : 'offline';
+            html += `
+              <div class="service">
+                <span>${service.name}:</span>
+                <span class="${statusClass}">${service.status}</span>
+              </div>
+            `;
+          });
+          statusDiv.innerHTML = html;
+        })
+        .catch(err => {
+          console.error(err);
+          document.getElementById("ugphone-status").innerText = "Không thể tải trạng thái.";
+        });
+    }
+
+    // Cập nhật trạng thái mỗi giây
+    setInterval(fetchUgPhoneStatus, 1000);
+
+    // Tải trạng thái ngay khi trang được tải
+    window.onload = fetchUgPhoneStatus;
+  </script>
+</body>
+</html>
