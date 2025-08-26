@@ -11,59 +11,10 @@
       color: #eee;
       padding: 20px;
     }
-
-    h1 {
-      text-align: center;
-      margin-bottom: 20px;
-      color: #0f0;
-    }
-
-    #stock-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 30px;
-      justify-content: center;
-    }
-
-    .link-box {
-      background-color: #222;
-      padding: 10px 15px;
-      border-radius: 8px;
-      transition: 0.3s;
-    }
-
-    .link-box a {
-      text-decoration: none;
-      color: #0f0;
-      font-weight: bold;
-    }
-
-    .link-box:hover {
-      background-color: #333;
-    }
-
-    table {
-      width: 100%;
-      max-width: 600px;
-      margin: 0 auto;
-      border-collapse: collapse;
-      background-color: #222;
-      border-radius: 8px;
-      overflow: hidden;
-    }
-
-    th, td {
-      padding: 10px;
-      text-align: center;
-      border-bottom: 1px solid #333;
-    }
-
-    th {
-      background-color: #333;
-      color: #0f0;
-    }
-
+    h1 { text-align: center; margin-bottom: 20px; color: #0f0; }
+    table { width: 100%; max-width: 600px; margin: 0 auto; border-collapse: collapse; background-color: #222; border-radius: 8px; overflow: hidden; }
+    th, td { padding: 10px; text-align: center; border-bottom: 1px solid #333; }
+    th { background-color: #333; color: #0f0; }
     tr:nth-child(even) { background-color: #1a1a1a; }
     tr:hover { background-color: #444; }
     td { color: #eee; }
@@ -72,8 +23,6 @@
 <body>
 
 <h1>UGPhone Stock</h1>
-
-<div id="stock-container"></div>
 
 <table id="stock-table">
   <thead>
@@ -91,41 +40,40 @@ async function loadStock() {
     const res = await fetch('https://meows.io.vn/call-ugphone-status');
     const data = await res.json();
 
-    // Nếu API trả mảng server
-    const servers = Array.isArray(data) ? data : [];
-
-    // Cập nhật box
-    const container = document.getElementById('stock-container');
-    container.innerHTML = '';
-    servers.forEach(s => {
-      const box = document.createElement('div');
-      box.className = 'link-box';
-      const link = document.createElement('a');
-      link.textContent = `${s.name} - ${s.stock > 0 ? '🟢 Còn' : '🔴 Hết'} (${s.stock})`;
-      box.appendChild(link);
-      container.appendChild(box);
-    });
-
-    // Cập nhật bảng
     const tbody = document.querySelector('#stock-table tbody');
     tbody.innerHTML = '';
-    servers.forEach(s => {
-      const tr = document.createElement('tr');
-      const tdName = document.createElement('td');
-      tdName.textContent = s.name;
-      const tdStatus = document.createElement('td');
-      tdStatus.textContent = s.stock > 0 ? '🟢 Còn máy' : '🔴 Hết máy';
-      tr.appendChild(tdName);
-      tr.appendChild(tdStatus);
-      tbody.appendChild(tr);
-    });
 
+    if (data.success && Array.isArray(data.status)) {
+      data.status.forEach(line => {
+        // Bỏ dòng tiêu đề và dòng Uptime
+        if (line.includes('Uptime') || line.includes('Trang thái')) return;
+
+        const tr = document.createElement('tr');
+
+        // Tách server và trạng thái bằng dấu ":"
+        const parts = line.split(':');
+        if (parts.length < 2) return;
+
+        const tdServer = document.createElement('td');
+        tdServer.textContent = parts[0].trim();
+
+        const tdStatus = document.createElement('td');
+        const statusEmoji = parts[1].trim();
+        if (statusEmoji.includes('🟢')) tdStatus.textContent = '🟢 Còn máy';
+        else if (statusEmoji.includes('🔴')) tdStatus.textContent = '🔴 Hết máy';
+        else tdStatus.textContent = '❌ Lỗi';
+
+        tr.appendChild(tdServer);
+        tr.appendChild(tdStatus);
+        tbody.appendChild(tr);
+      });
+    }
   } catch (err) {
     console.error('Không thể load stock', err);
   }
 }
 
-// Load ngay và cập nhật 1 giây 1 lần
+// Load ngay lập tức và cập nhật mỗi 1 giây
 loadStock();
 setInterval(loadStock, 1000);
 </script>
