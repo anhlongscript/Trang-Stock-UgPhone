@@ -14,41 +14,62 @@
       overflow: hidden;
     }
 
-    /* Container video nền */
+    /* Video nền YouTube */
     #video-bg {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      z-index: -1; /* Để bảng nằm trên video */
-      pointer-events: none; /* tránh click vào video */
+      z-index: -1;
+      pointer-events: none;
     }
 
-    /* Bảng stock */
-    h1 { text-align: center; margin-bottom: 20px; color: #0f0; }
+    h1 { 
+      text-align: center; 
+      margin: 30px 0; 
+      color: #ff0; /* vàng */
+      text-shadow: 2px 2px 4px #f00; /* đỏ */
+    }
+
     table { 
-      width: 100%; 
-      max-width: 600px; 
+      width: 90%; 
+      max-width: 800px; 
       margin: 50px auto; 
       border-collapse: collapse; 
       background-color: rgba(34,34,34,0.85); 
-      border-radius: 8px; 
+      border-radius: 12px; 
       overflow: hidden; 
+      font-size: 1.2em;
     }
-    th, td { padding: 10px; text-align: center; border-bottom: 1px solid #333; }
-    th { background-color: #333; color: #0f0; }
-    tr:nth-child(even) { background-color: #1a1a1a; }
-    tr:hover { background-color: #444; }
-    td { color: #eee; }
+
+    th, td { 
+      padding: 15px; 
+      text-align: center; 
+      border-bottom: 1px solid #333; 
+    }
+
+    th { 
+      background-color: #d20000; /* đỏ cờ VN */
+      color: #ff0; /* vàng cờ VN */
+    }
+
+    tr:nth-child(even) { background-color: rgba(0,0,0,0.5); }
+    tr:hover { background-color: rgba(255, 255, 0, 0.2); }
+
+    td.server { color: #ff0; } /* vàng */
+    td.status { font-weight: bold; }
+
+    td.status.green { color: #0f0; }   /* còn máy */
+    td.status.red { color: #f00; }     /* hết máy */
+    td.status.gray { color: #ccc; }    /* lỗi */
   </style>
 </head>
 <body>
 
-<!-- Video nền YouTube -->
 <iframe id="video-bg" 
-    src="https://www.youtube.com/embed/Sas3Tw_FpnA?autoplay=1&mute=1&controls=0&loop=1&playlist=Sas3Tw_FpnA&modestbranding=1&showinfo=0" 
-    frameborder="0" allow="autoplay; fullscreen"></iframe>
+    src="https://www.youtube.com/embed/Sas3Tw_FpnA?autoplay=1&controls=0&loop=1&playlist=Sas3Tw_FpnA&modestbranding=1&showinfo=0" 
+    frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>
 
 <h1>UGPhone Stock</h1>
 
@@ -81,12 +102,23 @@ async function loadStock() {
 
         const tdServer = document.createElement('td');
         tdServer.textContent = parts[0].trim();
+        tdServer.className = 'server';
 
         const tdStatus = document.createElement('td');
+        tdStatus.className = 'status';
         const statusEmoji = parts[1].trim();
-        if (statusEmoji.includes('🟢')) tdStatus.textContent = '🟢 Còn máy';
-        else if (statusEmoji.includes('🔴')) tdStatus.textContent = '🔴 Hết máy';
-        else tdStatus.textContent = '❌ Lỗi';
+        if (statusEmoji.includes('🟢')) {
+          tdStatus.textContent = '🟢 Còn máy';
+          tdStatus.classList.add('green');
+        }
+        else if (statusEmoji.includes('🔴')) {
+          tdStatus.textContent = '🔴 Hết máy';
+          tdStatus.classList.add('red');
+        }
+        else {
+          tdStatus.textContent = '❌ Lỗi';
+          tdStatus.classList.add('gray');
+        }
 
         tr.appendChild(tdServer);
         tr.appendChild(tdStatus);
