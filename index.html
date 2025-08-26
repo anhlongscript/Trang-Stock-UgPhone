@@ -1,157 +1,95 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <title>UGPhone Stock - 2/9</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    body, html {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      font-family: Arial, sans-serif;
-      color: #eee;
-      overflow: hidden;
-    }
-
-    /* Video nền */
-    #video-bg {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: -1;
-      pointer-events: none;
-      filter: brightness(0.5);
-    }
-
-    /* Bảng stock */
-    h1 { text-align: center; margin: 20px 0; color: #ffd700; text-shadow: 2px 2px #d20000; }
-    table { 
-      width: 90%; 
-      max-width: 700px; 
-      margin: 0 auto 50px auto; 
-      border-collapse: collapse; 
-      background-color: rgba(34,34,34,0.85); 
-      border-radius: 12px; 
-      overflow: hidden; 
-      font-size: 1.2em;
-      box-shadow: 0 0 20px rgba(255,0,0,0.6);
-    }
-    th, td { padding: 15px; text-align: center; border-bottom: 1px solid #333; }
-    th { background: #d20000; color: #ffd700; }
-    tr:nth-child(even) { background-color: rgba(255,255,0,0.1); }
-    tr:hover { background-color: rgba(255,215,0,0.3); }
-    td.server { color: #ffd700; font-weight: bold; }
-    td.status.green { color: #0f0; font-weight: bold; }
-    td.status.red { color: #f00; font-weight: bold; }
-
-    /* Nút bật/tắt âm thanh */
-    .sound-btn {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      z-index: 2;
-      padding: 12px 20px;
-      background: rgba(0,0,0,0.6);
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 16px;
-      transition: background 0.2s;
-    }
-    .sound-btn:hover { background: rgba(0,0,0,0.8); }
-  </style>
+<meta charset="UTF-8">
+<title>UGPhone Stock - 2/9</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+html, body { margin:0; padding:0; height:100%; font-family:Arial, sans-serif; color:#eee; overflow:hidden; }
+#video-bg { position:fixed; top:0; left:0; width:100%; height:100%; z-index:-1; pointer-events:none; filter:brightness(0.5); }
+h1 { text-align:center; margin:20px 0; color:#ffd700; text-shadow:2px 2px #d20000; }
+table { width:90%; max-width:700px; margin:0 auto 50px auto; border-collapse:collapse; background-color:rgba(34,34,34,0.85); border-radius:12px; overflow:hidden; font-size:1.2em; box-shadow:0 0 20px rgba(255,0,0,0.6); }
+th, td { padding:15px; text-align:center; border-bottom:1px solid #333; }
+th { background:#d20000; color:#ffd700; }
+tr:nth-child(even) { background-color: rgba(255,255,0,0.1); }
+tr:hover { background-color: rgba(255,215,0,0.3); }
+td.server { color:#ffd700; font-weight:bold; }
+td.status.green { color:#0f0; font-weight:bold; }
+td.status.red { color:#f00; font-weight:bold; }
+.sound-btn { position:fixed; bottom:20px; right:20px; z-index:2; padding:12px 20px; background:rgba(0,0,0,0.6); color:#fff; border:none; border-radius:8px; cursor:pointer; font-size:16px; transition:background 0.2s; margin-top:5px; }
+.sound-btn:hover { background: rgba(0,0,0,0.8); }
+#start-video { bottom:70px; }
+</style>
 </head>
 <body>
 
-<!-- Video nền YouTube -->
-<iframe id="video-bg" 
-    src="https://www.youtube.com/embed/Sas3Tw_FpnA?autoplay=0&mute=1&controls=0&loop=1&playlist=Sas3Tw_FpnA&modestbranding=1&showinfo=0" 
-    frameborder="0" allow="autoplay; fullscreen"></iframe>
+<div id="video-bg"></div>
 
 <h1>📊 UGPhone Stock - Mừng 2/9</h1>
 
 <table id="stock-table">
-  <thead>
-    <tr>
-      <th>Server</th>
-      <th>Trạng thái</th>
-    </tr>
-  </thead>
-  <tbody></tbody>
+<thead>
+<tr><th>Server</th><th>Trạng thái</th></tr>
+</thead>
+<tbody></tbody>
 </table>
 
-<!-- Nút bật/tắt âm thanh -->
+<button class="sound-btn" id="start-video">▶ Bắt đầu video nền</button>
 <button class="sound-btn" id="toggle-sound">🔊 Bật tiếng</button>
 
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
 let player;
-
-// Khởi tạo YouTube IFrame API
 function onYouTubeIframeAPIReady() {
   player = new YT.Player('video-bg', {
-    events: {
-      'onReady': e => e.target.mute() // Mặc định tắt tiếng
-    }
+    height: '100%',
+    width: '100%',
+    videoId: 'Sas3Tw_FpnA',
+    playerVars: { controls:0, loop:1, playlist:'Sas3Tw_FpnA', modestbranding:1, showinfo:0 },
+    events: { 'onReady': e => e.target.mute() }
   });
 }
 
-// Nút bật/tắt âm thanh
+// Bắt đầu video khi click nút
+document.getElementById('start-video').onclick = () => {
+  if(player && player.playVideo) player.playVideo();
+};
+
+// Bật/tắt âm thanh
 document.getElementById('toggle-sound').onclick = () => {
   if(!player) return;
-  if(player.isMuted()) {
-    player.unMute();
-    document.getElementById('toggle-sound').innerText = '🔇 Tắt tiếng';
-    player.playVideo(); // đảm bảo video đang chạy
-  } else {
-    player.mute();
-    document.getElementById('toggle-sound').innerText = '🔊 Bật tiếng';
-  }
-}
+  if(player.isMuted()){ player.unMute(); document.getElementById('toggle-sound').innerText='🔇 Tắt tiếng'; }
+  else{ player.mute(); document.getElementById('toggle-sound').innerText='🔊 Bật tiếng'; }
+};
+</script>
 
+<script>
 // Stock update
 async function loadStock() {
-  try {
+  try{
     const res = await fetch('https://meows.io.vn/call-ugphone-status');
     const data = await res.json();
-
     const tbody = document.querySelector('#stock-table tbody');
-    tbody.innerHTML = '';
-
-    if (data.success && Array.isArray(data.status)) {
-      data.status.forEach(line => {
-        if (line.includes('Uptime') || line.includes('Trang thái')) return;
-
-        const tr = document.createElement('tr');
-        const parts = line.split(':');
-        if (parts.length < 2) return;
-
-        const tdServer = document.createElement('td');
-        tdServer.textContent = parts[0].trim();
-        tdServer.className = 'server';
-
-        const tdStatus = document.createElement('td');
-        const statusEmoji = parts[1].trim();
-        if (statusEmoji.includes('🟢')) tdStatus.textContent = '🟢 Còn máy', tdStatus.className='status green';
-        else if (statusEmoji.includes('🔴')) tdStatus.textContent = '🔴 Hết máy', tdStatus.className='status red';
-        else tdStatus.textContent = '❌ Lỗi', tdStatus.className='status gray';
-
-        tr.appendChild(tdServer);
-        tr.appendChild(tdStatus);
+    tbody.innerHTML='';
+    if(data.success && Array.isArray(data.status)){
+      data.status.forEach(line=>{
+        if(line.includes('Uptime') || line.includes('Trang thái')) return;
+        const parts=line.split(':'); if(parts.length<2) return;
+        const tdServer=document.createElement('td'); tdServer.textContent=parts[0].trim(); tdServer.className='server';
+        const tdStatus=document.createElement('td');
+        const statusEmoji=parts[1].trim();
+        if(statusEmoji.includes('🟢')) tdStatus.textContent='🟢 Còn máy', tdStatus.className='status green';
+        else if(statusEmoji.includes('🔴')) tdStatus.textContent='🔴 Hết máy', tdStatus.className='status red';
+        else tdStatus.textContent='❌ Lỗi', tdStatus.className='status gray';
+        const tr=document.createElement('tr'); tr.appendChild(tdServer); tr.appendChild(tdStatus);
         tbody.appendChild(tr);
       });
     }
-  } catch (err) {
-    console.error('Không thể load stock', err);
-  }
+  }catch(err){ console.error('Không thể load stock',err);}
 }
-
 loadStock();
-setInterval(loadStock, 1000);
+setInterval(loadStock,1000);
 </script>
+
 </body>
 </html>
