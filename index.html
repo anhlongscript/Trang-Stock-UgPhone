@@ -12,6 +12,7 @@
       font-family: Arial, sans-serif;
       color: #eee;
       overflow: hidden;
+      background: #000;
     }
 
     /* Video nền YouTube */
@@ -28,8 +29,8 @@
     h1 { 
       text-align: center; 
       margin: 30px 0; 
-      color: #ff0; /* vàng */
-      text-shadow: 2px 2px 4px #f00; /* đỏ */
+      color: #ff0; 
+      text-shadow: 2px 2px 4px #f00; 
     }
 
     table { 
@@ -50,25 +51,40 @@
     }
 
     th { 
-      background-color: #d20000; /* đỏ cờ VN */
-      color: #ff0; /* vàng cờ VN */
+      background-color: #d20000; 
+      color: #ff0; 
     }
 
     tr:nth-child(even) { background-color: rgba(0,0,0,0.5); }
     tr:hover { background-color: rgba(255, 255, 0, 0.2); }
 
-    td.server { color: #ff0; } /* vàng */
+    td.server { color: #ff0; }
     td.status { font-weight: bold; }
+    td.status.green { color: #0f0; }   
+    td.status.red { color: #f00; }     
+    td.status.gray { color: #ccc; }    
 
-    td.status.green { color: #0f0; }   /* còn máy */
-    td.status.red { color: #f00; }     /* hết máy */
-    td.status.gray { color: #ccc; }    /* lỗi */
+    #play-btn {
+      display: block;
+      margin: 10px auto;
+      padding: 10px 20px;
+      font-size: 1em;
+      border: none;
+      border-radius: 8px;
+      background-color: #ff0;
+      color: #d20000;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    #play-btn:hover { background-color: #ffd700; }
   </style>
 </head>
 <body>
 
+<button id="play-btn">🔊 Bật nhạc nền</button>
+
 <iframe id="video-bg" 
-    src="https://www.youtube.com/embed/Sas3Tw_FpnA?autoplay=1&controls=0&loop=1&playlist=Sas3Tw_FpnA&modestbranding=1&showinfo=0" 
+    src="https://www.youtube.com/embed/Sas3Tw_FpnA?autoplay=1&mute=1&controls=0&loop=1&playlist=Sas3Tw_FpnA&modestbranding=1&showinfo=0&enablejsapi=1" 
     frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>
 
 <h1>UGPhone Stock</h1>
@@ -132,6 +148,12 @@ async function loadStock() {
 
 loadStock();
 setInterval(loadStock, 1000);
+
+// Nút bật nhạc nền
+document.getElementById('play-btn').addEventListener('click', () => {
+  const iframe = document.getElementById('video-bg');
+  iframe.contentWindow.postMessage('{"event":"command","func":"unMute","args":""}', '*');
+});
 </script>
 
 </body>
