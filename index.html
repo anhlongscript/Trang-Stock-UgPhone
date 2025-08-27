@@ -15,6 +15,12 @@
       color: #0f0;
       text-align: center;
     }
+    #timer {
+      text-align: center;
+      margin-top: 10px;
+      font-size: 18px;
+      color: #0ff;
+    }
     table {
       width: 100%;
       border-collapse: collapse;
@@ -40,6 +46,7 @@
 </head>
 <body>
   <h1>📦 UGPhone Stock</h1>
+  <div id="timer">Đang đồng bộ thời gian...</div>
   <table>
     <thead>
       <tr>
@@ -53,6 +60,13 @@
   </table>
 
   <script>
+    // Hàm lấy giờ hệ thống dạng HH:MM:SS
+    function getCurrentTime() {
+      const now = new Date();
+      return now.toLocaleTimeString("vi-VN", { hour12: false });
+    }
+
+    // Hàm load stock
     async function loadStock() {
       try {
         const response = await fetch("https://ugstock-proxy.dailong581.workers.dev/");
@@ -61,7 +75,6 @@
         const container = document.getElementById("stock-container");
         container.innerHTML = "";
 
-        // lấy mảng trong data.networks
         data.networks.forEach(item => {
           const row = document.createElement("tr");
           row.innerHTML = `
@@ -72,15 +85,23 @@
           `;
           container.appendChild(row);
         });
+
+        // Cập nhật thời gian lần cuối update
+        document.getElementById("timer").textContent =
+          "Cập nhật lúc: " + getCurrentTime();
+
       } catch (err) {
         document.getElementById("stock-container").innerHTML =
           `<tr><td colspan="2">❌ Lỗi khi tải dữ liệu</td></tr>`;
+        document.getElementById("timer").textContent = "❌ Lỗi khi cập nhật lúc: " + getCurrentTime();
       }
     }
 
-    // load lần đầu + auto cập nhật mỗi 5 giây
-    loadStock();
+    // Update stock mỗi 5 giây
     setInterval(loadStock, 5000);
+
+    // Chạy lần đầu
+    loadStock();
   </script>
 </body>
 </html>
