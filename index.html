@@ -1,99 +1,229 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>UGPhone Stock</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #111;
-      color: #eee;
-      text-align: center;
-      margin: 0;
-      padding: 20px;
+    :root{
+      --bg:#0f0f0f;--card:#252525;--muted:#a1a1a1;--text:#eee;--red:#ff5252;--green:#30e07b;--amber:#ffd54f;
+      --glow:0 0 25px rgba(255,82,82,.25);
     }
-    h1 {
-      color: #ff4747;
-      margin-bottom: 20px;
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;overflow:hidden}
+    /* video bg */
+    #video-wrap{position:fixed;inset:0;z-index:-1;pointer-events:none}
+    #video-wrap iframe{position:absolute;inset:0;width:100%;height:100%;filter:brightness(.45);border:0}
+    /* fallback bg nếu YT lỗi */
+    .bg-fallback{
+      position:fixed;inset:0;background:
+      radial-gradient(60vw 60vh at 10% 10%, #1b1b1b, transparent 40%),
+      radial-gradient(50vw 50vh at 90% 20%, #161616, transparent 40%),
+      radial-gradient(40vw 40vh at 50% 90%, #131313, transparent 50%),
+      #0c0c0c;
+      z-index:-2;
     }
-    table {
-      margin: auto;
-      border-collapse: collapse;
-      width: 80%;
-      background: #222;
-      box-shadow: 0 0 10px #000;
+    header{display:flex;gap:.6rem;align-items:center;justify-content:center;padding:18px 10px}
+    header h1{margin:0;font-weight:800;letter-spacing:.3px;color:#ff4a4a;text-shadow:0 3px 14px rgba(255,74,74,.35)}
+    header .logo{filter:drop-shadow(var(--glow))}
+    .shell{max-width:1100px;margin:0 auto;padding:0 16px}
+    table{width:100%;border-collapse:collapse;border-radius:14px;overflow:hidden;background:rgba(37,37,37,.88);box-shadow:0 10px 40px rgba(0,0,0,.35)}
+    thead th{background:#303030;color:#fff;padding:14px;font-size:17px}
+    tbody td{padding:14px;border-top:1px solid #2b2b2b;font-size:16px}
+    tbody tr:nth-child(even){background:rgba(255,255,255,.02)}
+    .name{font-weight:700;color:#ffe082}
+    .status{font-weight:700}
+    .status.ok{color:var(--green)}
+    .status.bad{color:var(--red)}
+    .status.unk{color:var(--muted)}
+    .muted{color:var(--muted)}
+    .bar{display:flex;gap:10px;align-items:center;justify-content:flex-end;margin:10px 0 16px}
+    .btn{
+      border:0;background:#1d1d1d;color:#fff;padding:10px 14px;border-radius:10px;cursor:pointer;
+      transition:.2s;box-shadow:0 0 0 1px #2a2a2a inset
     }
-    th, td {
-      border: 1px solid #444;
-      padding: 10px;
-    }
-    th {
-      background: #333;
-    }
-    td.status.green { color: #0f0; font-weight: bold; }
-    td.status.red { color: #f00; font-weight: bold; }
-    td.status.unknown { color: #ff0; font-weight: bold; }
+    .btn:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(0,0,0,.4),0 0 0 1px #3a3a3a inset}
+    .pill{font-size:13px;padding:6px 10px;border-radius:999px;background:#1a1a1a;border:1px solid #2b2b2b}
+    .error{margin:10px 0 0;color:#ff9e9e}
+    footer{position:fixed;right:12px;bottom:12px;font-size:12px;color:var(--muted)}
   </style>
 </head>
 <body>
-  <h1>📡 UGPhone Stock</h1>
-  <table>
-    <thead>
-      <tr>
-        <th>Server</th>
-        <th>Trạng thái</th>
-      </tr>
-    </thead>
-    <tbody id="stock-container">
-      <tr><td colspan="2">⏳ Đang tải dữ liệu...</td></tr>
-    </tbody>
-  </table>
+  <div id="video-wrap"></div>
+  <div class="bg-fallback" aria-hidden="true"></div>
+
+  <header class="shell">
+    <svg class="logo" width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M3 7.5h18v7.5a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V7.5Z" stroke="#ff5454" stroke-width="1.8" />
+      <path d="M7 7V5a5 5 0 0 1 10 0v2" stroke="#ff5454" stroke-width="1.8"/>
+      <circle cx="8" cy="13" r="1.2" fill="#fff"/>
+      <circle cx="12" cy="13" r="1.2" fill="#fff"/>
+      <circle cx="16" cy="13" r="1.2" fill="#fff"/>
+    </svg>
+    <h1>UGPhone Stock</h1>
+  </header>
+
+  <div class="shell">
+    <div class="bar">
+      <span id="last" class="pill">⏱ Chưa cập nhật</span>
+      <button id="sound" class="btn" type="button">🔊 Bật tiếng</button>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Server</th>
+          <th>Trạng thái</th>
+        </tr>
+      </thead>
+      <tbody id="tbody">
+        <tr><td class="muted" colspan="2">Đang tải…</td></tr>
+      </tbody>
+    </table>
+
+    <div id="error" class="error" hidden></div>
+  </div>
+
+  <footer>Tip: Nếu nền video bị trắng, trang sẽ tự thử nạp lại sau vài giây.</footer>
+
+  <!-- YouTube Iframe API -->
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <script>
+    /* ---------- Video nền: tự chạy (muted), có toggle âm thanh, tự hồi khi lỗi ---------- */
+    const VIDEO_ID = "Sas3Tw_FpnA";
+    let player, muted = true, ytReady = false, healTimer;
+
+    function onYouTubeIframeAPIReady(){
+      ytReady = true;
+      mountYT();
+    }
+    function mountYT(){
+      if(!ytReady) return;
+      const wrap = document.getElementById('video-wrap');
+      wrap.innerHTML = '<div id="yt-bg"></div>';
+      player = new YT.Player('yt-bg',{
+        width:'100%', height:'100%', videoId:VIDEO_ID,
+        playerVars:{
+          autoplay:1, mute:1, loop:1, playlist:VIDEO_ID, controls:0, disablekb:1,
+          fs:0, rel:0, iv_load_policy:3, modestbranding:1, playsinline:1
+        },
+        events:{
+          onReady:e => { try{ e.target.mute(); e.target.playVideo(); }catch{} scheduleHeal(); },
+          onStateChange: scheduleHeal,
+          onError: scheduleHeal
+        }
+      });
+    }
+    function scheduleHeal(){
+      clearTimeout(healTimer);
+      healTimer = setTimeout(()=>{
+        // Nếu player bị UNSTARTED quá lâu hoặc báo lỗi → remount
+        try{
+          const s = player.getPlayerState();
+          if(s === -1 || s === 3){ mountYT(); }
+        }catch{ mountYT(); }
+      }, 8000);
+    }
+    document.getElementById('sound').onclick = () => {
+      if(!player) return;
+      try{
+        if(muted){ player.unMute(); document.getElementById('sound').textContent = '🔇 Tắt tiếng'; }
+        else      { player.mute();   document.getElementById('sound').textContent = '🔊 Bật tiếng'; }
+        muted = !muted;
+      }catch{}
+    };
+  </script>
 
   <script>
-    async function loadStock() {
-      try {
-        const res = await fetch("https://meows.io.vn/api/ugphone-status");
-        const data = await res.json(); // ✅ API trả JSON
-        
-        const container = document.getElementById("stock-container");
-        container.innerHTML = "";
+    /* ---------- STOCK: ưu tiên gọi API gốc; nếu lỗi/CORS → fallback Worker ---------- */
+    const PRIMARY_API = "https://meows.io.vn/api/ugphone-status"; // API của bạn
+    const WORKER_API  = "https://REPLACE_WITH_YOUR_WORKER_URL/ugstock"; // thay sau khi deploy Worker
 
-        // Tạo hàng mới
-        const tr = document.createElement("tr");
+    const tbody = document.getElementById("tbody");
+    const errorBox = document.getElementById("error");
+    const last = document.getElementById("last");
 
-        // Cột server
-        const tdServer = document.createElement("td");
-        tdServer.textContent = "UGPhone";
-        tr.appendChild(tdServer);
+    async function loadStock(){
+      try{
+        let data = await tryFetch(PRIMARY_API);
+        if(!data) data = await tryFetch(WORKER_API, true); // dùng proxy nếu cần
+        if(!data) throw new Error("Không nhận được dữ liệu từ cả API gốc lẫn Worker.");
 
-        // Cột trạng thái
-        const tdStatus = document.createElement("td");
-
-        if (data.success && data.success.includes("🟢")) {
-          tdStatus.textContent = "🟢 Online";
-          tdStatus.className = "status green";
-        } else if (data.success && data.success.includes("🔴")) {
-          tdStatus.textContent = "🔴 Offline";
-          tdStatus.className = "status red";
-        } else {
-          tdStatus.textContent = "❓ Không rõ";
-          tdStatus.className = "status unknown";
-        }
-
-        tr.appendChild(tdStatus);
-        container.appendChild(tr);
-
-      } catch (err) {
-        console.error("Lỗi tải stock:", err);
-        const container = document.getElementById("stock-container");
-        container.innerHTML = `<tr><td colspan="2">❌ Lỗi khi tải dữ liệu</td></tr>`;
+        const rows = normalizeRows(data);
+        renderRows(rows);
+        markOk();
+      }catch(err){
+        renderError(err);
       }
     }
 
-    // Gọi lần đầu
+    async function tryFetch(url, isProxy=false){
+      if(!url || url.includes("REPLACE_WITH_YOUR_WORKER_URL")) return null;
+      try{
+        const r = await fetch(url, {cache:"no-cache"});
+        if(!r.ok) throw new Error(`HTTP ${r.status}`);
+        const text = await r.text();
+        // cho phép server trả JSON hoặc text
+        try{ return JSON.parse(text); } catch{ return text; }
+      }catch(e){
+        if(!isProxy) console.warn("Lỗi API gốc:", e);
+        else console.warn("Lỗi Worker:", e);
+        return null;
+      }
+    }
+
+    // chấp mọi format: {status:[...]} hoặc {data:[...]} hoặc text nhiều dòng
+    function normalizeRows(payload){
+      if(Array.isArray(payload)) return payload;
+      if(typeof payload === "string") return payload.split(/\r?\n/).filter(Boolean);
+      if(payload && typeof payload === "object"){
+        if(Array.isArray(payload.status)) return payload.status;
+        if(Array.isArray(payload.data)) return payload.data;
+        if(typeof payload.raw === "string") return payload.raw.split(/\r?\n/).filter(Boolean);
+      }
+      return [];
+    }
+
+    function renderRows(lines){
+      if(!lines.length){
+        tbody.innerHTML = `<tr><td class="muted" colspan="2">Không có dữ liệu.</td></tr>`;
+        return;
+      }
+      const fr = document.createDocumentFragment();
+      for(const line of lines){
+        // bỏ các dòng tiêu đề uptime nếu lẫn trong payload
+        if(/uptime|trạng\s*thái/i.test(line) && !/[🟢🔴]/.test(line)) continue;
+
+        const [left, rightRaw=""] = String(line).split(/[:\-]/,2);
+        const name = (left||"").trim();
+        const right = (rightRaw||"").trim();
+
+        let cls="unk", label="❓ Không rõ";
+        if(/[🟢]|online|còn|up|ok/i.test(right)) { cls="ok";  label="🟢 Online"; }
+        else if(/[🔴]|offline|hết|down|die/i.test(right)) { cls="bad"; label="🔴 Offline"; }
+
+        const tr = document.createElement("tr");
+        const td1 = document.createElement("td"); td1.className="name"; td1.textContent = name || "(Không tên)";
+        const td2 = document.createElement("td"); td2.className=`status ${cls}`; td2.textContent = label;
+
+        tr.appendChild(td1); tr.appendChild(td2); fr.appendChild(tr);
+      }
+      tbody.innerHTML = "";
+      tbody.appendChild(fr);
+    }
+
+    function markOk(){
+      errorBox.hidden = true;
+      last.textContent = "⏱ Cập nhật: " + new Date().toLocaleTimeString();
+    }
+    function renderError(err){
+      tbody.innerHTML = `<tr><td class="muted" colspan="2">❌ Lỗi khi tải dữ liệu</td></tr>`;
+      errorBox.hidden = false;
+      errorBox.textContent = "Chi tiết: " + (err && err.message ? err.message : err);
+    }
+
+    // lần đầu & auto refresh (đừng để 1s dễ bị rate-limit)
     loadStock();
-    // Tự động cập nhật mỗi 5 giây
     setInterval(loadStock, 5000);
   </script>
 </body>
