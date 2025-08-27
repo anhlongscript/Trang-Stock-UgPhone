@@ -1,167 +1,63 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <title>UGPhone Stock</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body, html {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      font-family: Arial, sans-serif;
-      color: white;
-      text-align: center;
-      background: #000;
-      overflow: hidden;
-    }
-
-    #bg-video {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      pointer-events: none;
-      z-index: -1;
-    }
-
-    .content {
-      position: relative;
-      z-index: 1;
-      padding: 20px;
-    }
-
-    .stock-table {
-      background: rgba(0,0,0,0.7);
-      border-radius: 12px;
-      padding: 16px;
-      margin: 20px auto;
-      width: 70%;
-      text-align: center;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    th, td {
-      padding: 10px;
-    }
-    th {
-      font-size: 18px;
-      border-bottom: 1px solid #87CEFA;
-    }
-    td {
-      font-size: 16px;
-    }
-
-    #clock {
-      font-size: 18px;
-      margin-bottom: 10px;
-    }
-
-    #sound-btn {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: bold;
-      margin-bottom: 10px;
-    }
-
-    .footer {
-      margin-top: 10px;
-      font-size: 14px;
-      opacity: 0.8;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Video nền</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+    background: #000;
+  }
+  #bg-video {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: 120%;
+    height: 120%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: -1;
+  }
+  .sound-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+    z-index: 10;
+  }
+</style>
 </head>
 <body>
 
-  <!-- Video nền -->
-  <iframe id="bg-video"
-    src="https://www.youtube.com/embed/EV-91JV4Fws?autoplay=1&mute=1&loop=1&playlist=EV-91JV4Fws&enablejsapi=1"
-    frameborder="0"
-    allow="autoplay"
-    allowfullscreen>
-  </iframe>
+<iframe id="bg-video"
+  src="https://www.youtube.com/embed/w4ANXtInE5o?autoplay=1&mute=1&loop=1&playlist=w4ANXtInE5o&controls=0&modestbranding=1&enablejsapi=1"
+  frameborder="0" allow="autoplay; encrypted-media" allowfullscreen>
+</iframe>
 
-  <div class="content">
-    <h1>📦 UGPhone Stock</h1>
-    <button id="sound-btn">🔇 Bật nhạc</button>
-    <div id="clock">🕒 Đang tải đồng hồ...</div>
-    <div class="stock-table">
-      <div id="stock-container">⏳ Đang tải dữ liệu...</div>
-      <div class="footer" id="last-update">Last Update: -</div>
-    </div>
-  </div>
+<button class="sound-btn" onclick="toggleSound()">🔊 Bật tiếng</button>
 
-  <script>
-    // ===== Đồng hồ thời gian thực =====
-    function updateClock() {
-      const now = new Date();
-      document.getElementById("clock").textContent = "🕒 " + now.toLocaleTimeString("vi-VN");
-    }
-    setInterval(updateClock, 1000);
-    updateClock();
-
-    // ===== Fetch stock =====
-    async function loadStock() {
-      try {
-        const res = await fetch("https://ugstock-proxy.dailong581.workers.dev/");
-        const data = await res.json();
-
-        if (!data.success) throw new Error("API trả về lỗi");
-
-        let html = "<table><tr><th>Quốc gia</th><th>Trạng thái</th></tr>";
-        data.networks.forEach(net => {
-          const status = net.status === "online" ? "🟢 Online" : "🔴 Offline";
-          html += `<tr><td>${net.name}</td><td>${status}</td></tr>`;
-        });
-        html += "</table>";
-
-        document.getElementById("stock-container").innerHTML = html;
-
-        // Cập nhật Last Update khi fetch thành công
-        const now = new Date();
-        document.getElementById("last-update").textContent = "Last Update: " + now.toLocaleString("vi-VN");
-
-      } catch (err) {
-        document.getElementById("stock-container").innerHTML = "❌ Lỗi khi tải dữ liệu";
-      }
-    }
-    setInterval(loadStock, 5000); // fetch mỗi 5 giây
-    loadStock();
-
-    // ===== Nút bật/tắt nhạc =====
-    let isMuted = true;
-    const btn = document.getElementById("sound-btn");
-    const iframe = document.getElementById("bg-video");
-
-    // Thêm YouTube Iframe API
-    var tag = document.createElement('script');
-    tag.src = "https://www.youtube.com/iframe_api";
-    var firstScriptTag = document.getElementsByTagName('script')[0];
-    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-
-    let player;
-    function onYouTubeIframeAPIReady() {
-      player = new YT.Player('bg-video', {
-        events: { 'onReady': () => player.mute() }
-      });
-    }
-
-    btn.addEventListener("click", () => {
-      if (player) {
-        if (isMuted) {
-          player.unMute();
-          btn.textContent = "🔊 Tắt nhạc";
-        } else {
-          player.mute();
-          btn.textContent = "🔇 Bật nhạc";
-        }
-        isMuted = !isMuted;
-      }
-    });
-  </script>
+<script>
+let isMuted = true;
+function toggleSound() {
+  const iframe = document.getElementById("bg-video");
+  iframe.contentWindow.postMessage(
+    JSON.stringify({ event: "command", func: isMuted ? "unMute" : "mute", args: [] }),
+    "*"
+  );
+  document.querySelector(".sound-btn").innerText = isMuted ? "🔇 Tắt tiếng" : "🔊 Bật tiếng";
+  isMuted = !isMuted;
+}
+</script>
 
 </body>
 </html>
