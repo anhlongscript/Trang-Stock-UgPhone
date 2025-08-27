@@ -14,7 +14,6 @@
     /* video bg */
     #video-wrap{position:fixed;inset:0;z-index:-1;pointer-events:none}
     #video-wrap iframe{position:absolute;inset:0;width:100%;height:100%;filter:brightness(.45);border:0}
-    /* fallback bg nếu YT lỗi */
     .bg-fallback{
       position:fixed;inset:0;background:
       radial-gradient(60vw 60vh at 10% 10%, #1b1b1b, transparent 40%),
@@ -69,7 +68,7 @@
       <button id="sound" class="btn" type="button">🔊 Bật tiếng</button>
     </div>
 
-    <table>
+    <table aria-live="polite">
       <thead>
         <tr>
           <th>Server</th>
@@ -81,7 +80,7 @@
       </tbody>
     </table>
 
-    <div id="error" class="error" hidden></div>
+    <div id="error" class="error" hidden aria-live="assertive"></div>
   </div>
 
   <footer>Tip: Nếu nền video bị trắng, trang sẽ tự thử nạp lại sau vài giây.</footer>
@@ -89,7 +88,6 @@
   <!-- YouTube Iframe API -->
   <script src="https://www.youtube.com/iframe_api"></script>
   <script>
-    /* ---------- Video nền: tự chạy (muted), có toggle âm thanh, tự hồi khi lỗi ---------- */
     const VIDEO_ID = "Sas3Tw_FpnA";
     let player, muted = true, ytReady = false, healTimer;
 
@@ -117,10 +115,10 @@
     function scheduleHeal(){
       clearTimeout(healTimer);
       healTimer = setTimeout(()=>{
-        // Nếu player bị UNSTARTED quá lâu hoặc báo lỗi → remount
         try{
           const s = player.getPlayerState();
-          if(s === -1 || s === 3){ mountYT(); }
+          // nếu không phải đang PLAYING (1) thì remount
+          if(s !== 1){ mountYT(); }
         }catch{ mountYT(); }
       }, 8000);
     }
@@ -135,9 +133,8 @@
   </script>
 
   <script>
-    /* ---------- STOCK: ưu tiên gọi API gốc; nếu lỗi/CORS → fallback Worker ---------- */
-    const PRIMARY_API = "https://meows.io.vn/api/ugphone-status"; // API của bạn
-    const WORKER_API  = "https://REPLACE_WITH_YOUR_WORKER_URL/ugstock"; // thay sau khi deploy Worker
+    const PRIMARY_API = "https://meows.io.vn/api/ugphone-status";
+    const WORKER_API  = "https://REPLACE_WITH_YOUR_WORKER_URL/ugstock";
 
     const tbody = document.getElementById("tbody");
     const errorBox = document.getElementById("error");
@@ -146,7 +143,7 @@
     async function loadStock(){
       try{
         let data = await tryFetch(PRIMARY_API);
-        if(!data) data = await tryFetch(WORKER_API, true); // dùng proxy nếu cần
+        if(!data) data = await tryFetch(WORKER_API, true);
         if(!data) throw new Error("Không nhận được dữ liệu từ cả API gốc lẫn Worker.");
 
         const rows = normalizeRows(data);
@@ -163,7 +160,6 @@
         const r = await fetch(url, {cache:"no-cache"});
         if(!r.ok) throw new Error(`HTTP ${r.status}`);
         const text = await r.text();
-        // cho phép server trả JSON hoặc text
         try{ return JSON.parse(text); } catch{ return text; }
       }catch(e){
         if(!isProxy) console.warn("Lỗi API gốc:", e);
@@ -172,9 +168,14 @@
       }
     }
 
-    // chấp mọi format: {status:[...]} hoặc {data:[...]} hoặc text nhiều dòng
     function normalizeRows(payload){
-      if(Array.isArray(payload)) return payload;
+      if(Array.isArray(payload)) {
+        // nếu payload là list object {server, status}
+        if(payload.every(x => typeof x==="object" && x.server && x.status)){
+          return payload.map(x => `${x.server}:${x.status}`);
+        }
+        return payload;
+      }
       if(typeof payload === "string") return payload.split(/\r?\n/).filter(Boolean);
       if(payload && typeof payload === "object"){
         if(Array.isArray(payload.status)) return payload.status;
@@ -191,7 +192,6 @@
       }
       const fr = document.createDocumentFragment();
       for(const line of lines){
-        // bỏ các dòng tiêu đề uptime nếu lẫn trong payload
         if(/uptime|trạng\s*thái/i.test(line) && !/[🟢🔴]/.test(line)) continue;
 
         const [left, rightRaw=""] = String(line).split(/[:\-]/,2);
@@ -205,6 +205,7 @@
         const tr = document.createElement("tr");
         const td1 = document.createElement("td"); td1.className="name"; td1.textContent = name || "(Không tên)";
         const td2 = document.createElement("td"); td2.className=`status ${cls}`; td2.textContent = label;
+        td2.title = right; // giữ lại text gốc để hover xem
 
         tr.appendChild(td1); tr.appendChild(td2); fr.appendChild(tr);
       }
@@ -222,9 +223,8 @@
       errorBox.textContent = "Chi tiết: " + (err && err.message ? err.message : err);
     }
 
-    // lần đầu & auto refresh (đừng để 1s dễ bị rate-limit)
     loadStock();
-    setInterval(loadStock, 5000);
+    setInterval(loadStock, 12000); // refresh 12 giây
   </script>
 </body>
 </html>
