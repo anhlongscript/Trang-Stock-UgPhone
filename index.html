@@ -23,12 +23,15 @@
       overflow: hidden;
       z-index: -1;
     }
-    .video-background iframe {
+    .video-foreground {
       position: absolute;
       top: 50%; left: 50%;
       width: 120%; height: 120%;
       transform: translate(-50%, -50%);
       pointer-events: none;
+    }
+    .video-foreground iframe {
+      width: 100%; height: 100%;
     }
 
     /* Nền mờ để nội dung dễ nhìn */
@@ -82,13 +85,34 @@
       color: #ccc;
       margin-top: 8px;
     }
+
+    /* Nút bật nhạc */
+    #sound-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(0,0,0,0.6);
+      color: #fff;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 12px;
+      font-size: 16px;
+      cursor: pointer;
+      z-index: 1000;
+      transition: background 0.3s;
+    }
+    #sound-btn:hover {
+      background: rgba(255,255,255,0.2);
+    }
   </style>
 </head>
 <body>
   <!-- YouTube video làm background -->
   <div class="video-background">
-    <iframe src="https://www.youtube.com/embed/EV-91JV4Fws?autoplay=1&mute=1&loop=1&playlist=EV-91JV4Fws&controls=0&modestbranding=1&rel=0"
-      frameborder="0" allow="autoplay; fullscreen"></iframe>
+    <div class="video-foreground">
+      <iframe src="https://www.youtube.com/embed/EV-91JV4Fws?autoplay=1&mute=1&loop=1&playlist=EV-91JV4Fws&controls=0&modestbranding=1&rel=0"
+        frameborder="0" allow="autoplay; fullscreen"></iframe>
+    </div>
   </div>
 
   <!-- Nội dung chính -->
@@ -97,6 +121,9 @@
     <div id="clock">⏰ Đang đồng hồ...</div>
     <div id="stock-container">Đang tải dữ liệu...</div>
   </div>
+
+  <!-- Nút bật nhạc -->
+  <button id="sound-btn">🔊 Bật nhạc</button>
 
   <script>
     // Đồng hồ thời gian thực theo giây
@@ -133,39 +160,17 @@
     }
     loadStock();
     setInterval(loadStock, 5000);
- <!-- Nút bật nhạc -->
-    <button id="sound-btn">🔊 Bật nhạc</button>
 
-    <style>
-      #sound-btn {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        background: rgba(0,0,0,0.6);
-        color: #fff;
-        border: none;
-        padding: 10px 16px;
-        border-radius: 12px;
-        font-size: 16px;
-        cursor: pointer;
-        z-index: 1000;
-        transition: background 0.3s;
-      }
-      #sound-btn:hover {
-        background: rgba(255,255,255,0.2);
-      }
-    </style>
-
-    <script>
-      const btn = document.getElementById("sound-btn");
-      btn.addEventListener("click", () => {
-        document.querySelector(".video-foreground").innerHTML = `
-          <iframe src="https://www.youtube.com/embed/EV-91JV4Fws?autoplay=1&mute=0&loop=1&playlist=EV-91JV4Fws&controls=0&showinfo=0&modestbranding=1"
-            frameborder="0" allow="autoplay; fullscreen">
-          </iframe>
-        `;
-        btn.style.display = "none"; // ẩn nút sau khi bật
-      });
-    </script>
-  </body>
+    // Nút bật nhạc
+    const btn = document.getElementById("sound-btn");
+    btn.addEventListener("click", () => {
+      document.querySelector(".video-foreground").innerHTML = `
+        <iframe src="https://www.youtube.com/embed/EV-91JV4Fws?autoplay=1&mute=0&loop=1&playlist=EV-91JV4Fws&controls=0&showinfo=0&modestbranding=1&rel=0"
+          frameborder="0" allow="autoplay; fullscreen">
+        </iframe>
+      `;
+      btn.style.display = "none"; // ẩn nút sau khi bật
+    });
+  </script>
+</body>
 </html>
