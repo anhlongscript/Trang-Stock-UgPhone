@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>UGPhone Stock - Auto Play</title>
+  <title>UGPhone Stock</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body {
@@ -31,34 +31,17 @@
     th {
       background: #333;
     }
-    #video-bg {
-      position: fixed;
-      right: 0;
-      bottom: 0;
-      min-width: 100%;
-      min-height: 100%;
-      z-index: -1;
-      object-fit: cover;
-    }
+    td.status.green { color: #0f0; font-weight: bold; }
+    td.status.red { color: #f00; font-weight: bold; }
   </style>
 </head>
 <body>
-  <!-- Video nền -->
-  <video id="video-bg" autoplay muted loop playsinline>
-    <source src="video.mp4" type="video/mp4">
-  </video>
-
-  <!-- Âm nhạc -->
-  <audio id="bg-music" autoplay loop>
-    <source src="music.mp3" type="audio/mpeg">
-  </audio>
-
-  <h1>📦 UGPhone Stock</h1>
+  <h1>📡 UGPhone Stock</h1>
   <table>
     <thead>
       <tr>
-        <th>Tên</th>
-        <th>Số lượng</th>
+        <th>Server</th>
+        <th>Trạng thái</th>
       </tr>
     </thead>
     <tbody id="stock-container">
@@ -67,35 +50,50 @@
   </table>
 
   <script>
-    // Trick để nhạc auto phát có tiếng
-    const music = document.getElementById("bg-music");
-    document.addEventListener("DOMContentLoaded", () => {
-      music.muted = true;
-      music.play().then(() => {
-        setTimeout(() => {
-          music.muted = false; // bật tiếng sau 1s
-        }, 1000);
-      }).catch(err => console.log("Autoplay bị chặn:", err));
-    });
-
-    // Load stock từ API mỗi 1 giây
     async function loadStock() {
       try {
-        const res = await fetch("https://meows.io.vn/call-ugphone-status");
-        const data = await res.json();
+        const res = await fetch("https://meows.io.vn/api/ugphone-status");
+        const text = await res.text();
+
         const container = document.getElementById("stock-container");
         container.innerHTML = "";
-        for (const item of data) {
+
+        text.split("\n").forEach(line => {
+          if (!line.trim()) return;
+          if (line.includes("Uptime") || line.includes("Trạng thái")) return;
+
+          const parts = line.split(":");
+          if (parts.length < 2) return;
+
+          const server = parts[0].trim();
+          const statusEmoji = parts[1].trim();
+
           const tr = document.createElement("tr");
-          tr.innerHTML = `<td>${item.name}</td><td>${item.stock}</td>`;
+          const tdServer = document.createElement("td");
+          tdServer.textContent = server;
+
+          const tdStatus = document.createElement("td");
+          if (statusEmoji.includes("🟢")) {
+            tdStatus.textContent = "🟢 Online";
+            tdStatus.className = "status green";
+          } else if (statusEmoji.includes("🔴")) {
+            tdStatus.textContent = "🔴 Offline";
+            tdStatus.className = "status red";
+          } else {
+            tdStatus.textContent = "❓ Không rõ";
+          }
+
+          tr.appendChild(tdServer);
+          tr.appendChild(tdStatus);
           container.appendChild(tr);
-        }
+        });
+
       } catch (err) {
         console.error("Lỗi tải stock:", err);
       }
     }
     loadStock();
-    setInterval(loadStock, 1000);
+    setInterval(loadStock, 2000);
   </script>
 </body>
 </html>
