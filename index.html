@@ -28,7 +28,7 @@
       z-index: -1;
       overflow: hidden;
     }
-    .video-foreground iframe {
+    .video-background iframe {
       width: 100vw;
       height: 100vh;
       pointer-events: none;
@@ -40,7 +40,7 @@
       border-radius: 12px;
       padding: 16px;
       margin: 50px auto;
-      width: 70%; /* rộng hơn */
+      width: 70%;
       text-align: center;
     }
     table {
@@ -64,7 +64,7 @@
       margin-bottom: 10px;
     }
 
-    /* Nút bật nhạc */
+    /* Nút bật/tắt nhạc */
     #sound-btn {
       position: fixed;
       bottom: 20px;
@@ -87,11 +87,10 @@
 <body>
   <!-- Video nền -->
   <div class="video-background">
-    <div class="video-foreground">
-      <iframe src="https://www.youtube.com/embed/EV-91JV4Fws?autoplay=1&mute=1&loop=1&playlist=EV-91JV4Fws&controls=0&showinfo=0&modestbranding=1"
-        frameborder="0" allow="autoplay; fullscreen">
-      </iframe>
-    </div>
+    <iframe id="bg-video" 
+      src="https://www.youtube.com/embed/EV-91JV4Fws?autoplay=1&mute=1&loop=1&playlist=EV-91JV4Fws&controls=0&showinfo=0&modestbranding=1" 
+      frameborder="0" allow="autoplay; fullscreen" allowfullscreen>
+    </iframe>
   </div>
 
   <!-- Nội dung -->
@@ -101,11 +100,11 @@
     <div id="stock-container">⏳ Đang tải dữ liệu...</div>
   </div>
 
-  <!-- Nút bật nhạc -->
+  <!-- Nút bật/tắt nhạc -->
   <button id="sound-btn">🔊 Bật nhạc</button>
 
   <script>
-    // Cập nhật đồng hồ thời gian thực
+    // ===== Đồng hồ thời gian thực =====
     function updateClock() {
       const now = new Date();
       const timeStr = now.toLocaleTimeString("vi-VN");
@@ -114,7 +113,7 @@
     setInterval(updateClock, 1000);
     updateClock();
 
-    // Fetch API 5 giây/lần
+    // ===== Load Stock mỗi 5 giây =====
     async function loadStock() {
       try {
         const res = await fetch("https://ugstock-proxy.dailong581.workers.dev/");
@@ -137,15 +136,15 @@
     setInterval(loadStock, 5000);
     loadStock();
 
-    // Nút bật nhạc
-    const btn = document.getElementById("sound-btn");
-    btn.addEventListener("click", () => {
-      document.querySelector(".video-foreground").innerHTML = `
-        <iframe src="https://www.youtube.com/embed/EV-91JV4Fws?autoplay=1&mute=0&loop=1&playlist=EV-91JV4Fws&controls=0&showinfo=0&modestbranding=1"
-          frameborder="0" allow="autoplay; fullscreen">
-        </iframe>
-      `;
-      btn.style.display = "none";
+    // ===== Nút bật/tắt nhạc =====
+    const soundBtn = document.getElementById("sound-btn");
+    let isMuted = true;
+    soundBtn.addEventListener("click", () => {
+      const video = document.getElementById("bg-video");
+      // Toggle mute
+      isMuted = !isMuted;
+      video.src = `https://www.youtube.com/embed/EV-91JV4Fws?autoplay=1&mute=${isMuted ? 1 : 0}&loop=1&playlist=EV-91JV4Fws&controls=0&showinfo=0&modestbranding=1`;
+      soundBtn.textContent = isMuted ? "🔊 Bật nhạc" : "🔇 Tắt nhạc";
     });
   </script>
 </body>
