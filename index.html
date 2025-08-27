@@ -6,146 +6,147 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body, html {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      background: #000;
-      color: #87CEFA; /* xanh dương nhạt */
-      font-family: Arial, sans-serif;
+      margin: 0; padding: 0;
+      width: 100%; height: 100%;
       overflow: hidden;
+      font-family: Arial, sans-serif;
+      color: #87CEFA; /* xanh dương nhạt */
+      background: #000;
+      animation: fadeIn 1.2s ease-in-out;
     }
 
-    /* Nền video */
-    #bg-video {
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    /* Video nền */
+    .video-background {
       position: fixed;
       top: 0; left: 0;
-      width: 100%;
-      height: 100%;
+      width: 100%; height: 100%;
       z-index: -1;
+      overflow: hidden;
+    }
+    .video-foreground iframe {
+      width: 100vw;
+      height: 100vh;
       pointer-events: none;
     }
 
-    /* Animation fade-in */
-    .fade-in {
-      animation: fadeIn 1.5s ease-in-out;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(30px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
     /* Bảng */
-    #stock-container {
-      margin: 60px auto;
-      background: rgba(0,0,0,0.6);
-      padding: 20px;
+    .stock-table {
+      background: rgba(0,0,0,0.7);
       border-radius: 12px;
-      width: 70%; /* bảng rộng hơn 1 chút */
-      max-width: 900px;
+      padding: 16px;
+      margin: 50px auto;
+      width: 70%; /* rộng hơn */
       text-align: center;
-      box-shadow: 0 0 20px rgba(0,0,0,0.7);
     }
-
     table {
       width: 100%;
       border-collapse: collapse;
     }
     th, td {
-      padding: 12px;
-      border-bottom: 1px solid #444;
+      padding: 10px;
     }
     th {
-      font-size: 20px;
-      color: #87CEFA;
+      font-size: 18px;
+      border-bottom: 1px solid #87CEFA;
     }
     td {
-      font-size: 18px;
+      font-size: 16px;
     }
-    .online { color: #00ff00; }
-    .offline { color: #ff3333; }
 
     /* Đồng hồ */
     #clock {
-      margin-top: 10px;
       font-size: 18px;
-      color: #87CEFA;
+      margin-bottom: 10px;
+    }
+
+    /* Nút bật nhạc */
+    #sound-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(0,0,0,0.6);
+      color: #fff;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 12px;
+      font-size: 16px;
+      cursor: pointer;
+      z-index: 1000;
+      transition: background 0.3s;
+    }
+    #sound-btn:hover {
+      background: rgba(255,255,255,0.2);
     }
   </style>
 </head>
-<body class="fade-in">
-
-  <!-- YouTube video nền -->
-  <div id="bg-video"></div>
-
-  <!-- Bảng stock -->
-  <div id="stock-container">
-    <h2>📦 Stock UGPhone</h2>
-    <table id="stock-table">
-      <tr><th>Server</th><th>Trạng thái</th></tr>
-    </table>
-    <div id="clock">Đang tải giờ...</div>
+<body>
+  <!-- Video nền -->
+  <div class="video-background">
+    <div class="video-foreground">
+      <iframe src="https://www.youtube.com/embed/EV-91JV4Fws?autoplay=1&mute=1&loop=1&playlist=EV-91JV4Fws&controls=0&showinfo=0&modestbranding=1"
+        frameborder="0" allow="autoplay; fullscreen">
+      </iframe>
+    </div>
   </div>
 
+  <!-- Nội dung -->
+  <div class="stock-table">
+    <div id="clock">Đang tải đồng hồ...</div>
+    <h2>📦 Trạng thái UGPhone</h2>
+    <div id="stock-container">⏳ Đang tải dữ liệu...</div>
+  </div>
+
+  <!-- Nút bật nhạc -->
+  <button id="sound-btn">🔊 Bật nhạc</button>
+
   <script>
-    // Load API YouTube
-    let tag = document.createElement('script');
-    tag.src = "https://www.youtube.com/iframe_api";
-    document.body.appendChild(tag);
-
-    let player;
-    function onYouTubeIframeAPIReady() {
-      player = new YT.Player('bg-video', {
-        videoId: 'EV-91JV4Fws', // ID video
-        playerVars: {
-          autoplay: 1,
-          mute: 0,     // 0 = có tiếng
-          loop: 1,
-          playlist: 'EV-91JV4Fws',
-          controls: 0,
-          showinfo: 0,
-          modestbranding: 1
-        },
-        events: {
-          'onReady': (e) => {
-            e.target.playVideo();
-            e.target.unMute();
-            e.target.setVolume(100);
-          }
-        }
-      });
-    }
-
-    // Cập nhật đồng hồ real-time
+    // Cập nhật đồng hồ thời gian thực
     function updateClock() {
       const now = new Date();
-      document.getElementById("clock").innerText =
-        now.toLocaleTimeString("vi-VN");
+      const timeStr = now.toLocaleTimeString("vi-VN");
+      document.getElementById("clock").textContent = "🕒 " + timeStr;
     }
     setInterval(updateClock, 1000);
     updateClock();
 
-    // Load stock mỗi 5s
+    // Fetch API 5 giây/lần
     async function loadStock() {
       try {
-        const res = await fetch("https://ugstock-proxy.pages.dev/");
+        const res = await fetch("https://ugstock-proxy.dailong581.workers.dev/");
         const data = await res.json();
-        const table = document.getElementById("stock-table");
-        table.innerHTML = "<tr><th>Server</th><th>Trạng thái</th></tr>";
-        data.networks.forEach(n => {
-          table.innerHTML += `
-            <tr>
-              <td>${n.name}</td>
-              <td class="${n.status}">${n.status.toUpperCase()}</td>
-            </tr>
-          `;
+        
+        if (!data.success) throw new Error("API trả về lỗi");
+
+        let html = "<table><tr><th>Quốc gia</th><th>Trạng thái</th></tr>";
+        data.networks.forEach(net => {
+          const status = net.status === "online" ? "🟢 Online" : "🔴 Offline";
+          html += `<tr><td>${net.name}</td><td>${status}</td></tr>`;
         });
-      } catch (e) {
-        document.getElementById("stock-table").innerHTML =
-          "<tr><td colspan='2'>❌ Lỗi khi tải dữ liệu</td></tr>";
+        html += "</table>";
+
+        document.getElementById("stock-container").innerHTML = html;
+      } catch (err) {
+        document.getElementById("stock-container").innerHTML = "❌ Lỗi khi tải dữ liệu";
       }
     }
     setInterval(loadStock, 5000);
     loadStock();
+
+    // Nút bật nhạc
+    const btn = document.getElementById("sound-btn");
+    btn.addEventListener("click", () => {
+      document.querySelector(".video-foreground").innerHTML = `
+        <iframe src="https://www.youtube.com/embed/EV-91JV4Fws?autoplay=1&mute=0&loop=1&playlist=EV-91JV4Fws&controls=0&showinfo=0&modestbranding=1"
+          frameborder="0" allow="autoplay; fullscreen">
+        </iframe>
+      `;
+      btn.style.display = "none";
+    });
   </script>
 </body>
 </html>
