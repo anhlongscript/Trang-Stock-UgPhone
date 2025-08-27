@@ -33,6 +33,7 @@
     }
     td.status.green { color: #0f0; font-weight: bold; }
     td.status.red { color: #f00; font-weight: bold; }
+    td.status.unknown { color: #ff0; font-weight: bold; }
   </style>
 </head>
 <body>
@@ -45,7 +46,7 @@
       </tr>
     </thead>
     <tbody id="stock-container">
-      <tr><td colspan="2">Đang tải...</td></tr>
+      <tr><td colspan="2">⏳ Đang tải dữ liệu...</td></tr>
     </tbody>
   </table>
 
@@ -53,14 +54,12 @@
     async function loadStock() {
       try {
         const res = await fetch("https://meows.io.vn/api/ugphone-status");
-        const data = await res.json(); // ✅ Lấy JSON
-
+        const data = await res.json(); // ✅ API trả JSON
+        
         const container = document.getElementById("stock-container");
         container.innerHTML = "";
 
-        // API trả về object { success: "nội dung" }
-        const message = data.success || "Không rõ";
-
+        // Tạo hàng mới
         const tr = document.createElement("tr");
 
         // Cột server
@@ -71,14 +70,15 @@
         // Cột trạng thái
         const tdStatus = document.createElement("td");
 
-        if (message.includes("🟢")) {
+        if (data.success && data.success.includes("🟢")) {
           tdStatus.textContent = "🟢 Online";
           tdStatus.className = "status green";
-        } else if (message.includes("🔴")) {
+        } else if (data.success && data.success.includes("🔴")) {
           tdStatus.textContent = "🔴 Offline";
           tdStatus.className = "status red";
         } else {
           tdStatus.textContent = "❓ Không rõ";
+          tdStatus.className = "status unknown";
         }
 
         tr.appendChild(tdStatus);
@@ -86,9 +86,14 @@
 
       } catch (err) {
         console.error("Lỗi tải stock:", err);
+        const container = document.getElementById("stock-container");
+        container.innerHTML = `<tr><td colspan="2">❌ Lỗi khi tải dữ liệu</td></tr>`;
       }
     }
+
+    // Gọi lần đầu
     loadStock();
+    // Tự động cập nhật mỗi 5 giây
     setInterval(loadStock, 5000);
   </script>
 </body>
