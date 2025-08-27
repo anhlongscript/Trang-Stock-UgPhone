@@ -53,47 +53,43 @@
     async function loadStock() {
       try {
         const res = await fetch("https://meows.io.vn/api/ugphone-status");
-        const text = await res.text();
+        const data = await res.json(); // ✅ Lấy JSON
 
         const container = document.getElementById("stock-container");
         container.innerHTML = "";
 
-        text.split("\n").forEach(line => {
-          if (!line.trim()) return;
-          if (line.includes("Uptime") || line.includes("Trạng thái")) return;
+        // API trả về object { success: "nội dung" }
+        const message = data.success || "Không rõ";
 
-          const parts = line.split(":");
-          if (parts.length < 2) return;
+        const tr = document.createElement("tr");
 
-          const server = parts[0].trim();
-          const statusEmoji = parts[1].trim();
+        // Cột server
+        const tdServer = document.createElement("td");
+        tdServer.textContent = "UGPhone";
+        tr.appendChild(tdServer);
 
-          const tr = document.createElement("tr");
-          const tdServer = document.createElement("td");
-          tdServer.textContent = server;
+        // Cột trạng thái
+        const tdStatus = document.createElement("td");
 
-          const tdStatus = document.createElement("td");
-          if (statusEmoji.includes("🟢")) {
-            tdStatus.textContent = "🟢 Online";
-            tdStatus.className = "status green";
-          } else if (statusEmoji.includes("🔴")) {
-            tdStatus.textContent = "🔴 Offline";
-            tdStatus.className = "status red";
-          } else {
-            tdStatus.textContent = "❓ Không rõ";
-          }
+        if (message.includes("🟢")) {
+          tdStatus.textContent = "🟢 Online";
+          tdStatus.className = "status green";
+        } else if (message.includes("🔴")) {
+          tdStatus.textContent = "🔴 Offline";
+          tdStatus.className = "status red";
+        } else {
+          tdStatus.textContent = "❓ Không rõ";
+        }
 
-          tr.appendChild(tdServer);
-          tr.appendChild(tdStatus);
-          container.appendChild(tr);
-        });
+        tr.appendChild(tdStatus);
+        container.appendChild(tr);
 
       } catch (err) {
         console.error("Lỗi tải stock:", err);
       }
     }
     loadStock();
-    setInterval(loadStock, 2000);
+    setInterval(loadStock, 5000);
   </script>
 </body>
 </html>
