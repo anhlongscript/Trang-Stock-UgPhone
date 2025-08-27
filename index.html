@@ -4,152 +4,148 @@
   <meta charset="UTF-8">
   <title>UGPhone Stock</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
   <style>
     body, html {
       margin: 0;
       padding: 0;
       height: 100%;
-      font-family: Arial, sans-serif;
       background: #000;
-      color: #87CEFA; /* Xanh dương nhạt */
+      color: #87CEFA; /* xanh dương nhạt */
+      font-family: Arial, sans-serif;
       overflow: hidden;
-      animation: fadeIn 1.5s ease-in-out; /* animation khi load web */
     }
 
-    /* Animation mở web */
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(30px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* Video nền */
-    .video-background {
+    /* Nền video */
+    #bg-video {
       position: fixed;
       top: 0; left: 0;
-      width: 100%; height: 100%;
-      overflow: hidden;
+      width: 100%;
+      height: 100%;
       z-index: -1;
-    }
-    .video-foreground {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      pointer-events: none;
-    }
-    .video-foreground iframe {
-      width: 100%; height: 100%;
       pointer-events: none;
     }
 
-    /* Container chính */
-    .container {
-      text-align: center;
+    /* Animation fade-in */
+    .fade-in {
+      animation: fadeIn 1.5s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(30px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Bảng */
+    #stock-container {
+      margin: 60px auto;
+      background: rgba(0,0,0,0.6);
       padding: 20px;
-      margin-top: 60px;
-    }
-
-    h1 {
-      font-size: 32px;
-      margin-bottom: 20px;
-    }
-
-    /* Bảng trạng thái */
-    table {
-      margin: 0 auto;
-      border-collapse: collapse;
-      width: 65%; /* rộng hơn 1 chút */
-      background: rgba(0, 0, 0, 0.6);
       border-radius: 12px;
-      overflow: hidden;
-      animation: fadeIn 2s ease-in-out;
+      width: 70%; /* bảng rộng hơn 1 chút */
+      max-width: 900px;
+      text-align: center;
+      box-shadow: 0 0 20px rgba(0,0,0,0.7);
     }
 
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
     th, td {
-      border: 1px solid rgba(135,206,250,0.3);
-      padding: 12px 18px;
-      text-align: center;
+      padding: 12px;
+      border-bottom: 1px solid #444;
+    }
+    th {
+      font-size: 20px;
+      color: #87CEFA;
+    }
+    td {
       font-size: 18px;
     }
-
-    th {
-      background: rgba(0, 0, 50, 0.7);
-    }
+    .online { color: #00ff00; }
+    .offline { color: #ff3333; }
 
     /* Đồng hồ */
     #clock {
-      margin-top: 15px;
-      font-size: 20px;
-      font-weight: bold;
+      margin-top: 10px;
+      font-size: 18px;
       color: #87CEFA;
     }
   </style>
 </head>
-<body>
+<body class="fade-in">
 
-  <!-- Video nền -->
-  <div class="video-background">
-    <div class="video-foreground">
-      <iframe src="https://www.youtube.com/embed/EV-91JV4Fws?autoplay=1&mute=0&loop=1&playlist=EV-91JV4Fws&controls=0&showinfo=0&modestbranding=1"
-        frameborder="0" allow="autoplay; fullscreen">
-      </iframe>
-    </div>
-  </div>
+  <!-- YouTube video nền -->
+  <div id="bg-video"></div>
 
-  <div class="container">
-    <h1>📦 Stock UGPhone</h1>
-    <div id="clock">--:--:--</div>
-    <table>
-      <thead>
-        <tr>
-          <th>Server</th>
-          <th>Trạng thái</th>
-        </tr>
-      </thead>
-      <tbody id="stock-body">
-        <tr><td colspan="2">⏳ Đang tải...</td></tr>
-      </tbody>
+  <!-- Bảng stock -->
+  <div id="stock-container">
+    <h2>📦 Stock UGPhone</h2>
+    <table id="stock-table">
+      <tr><th>Server</th><th>Trạng thái</th></tr>
     </table>
+    <div id="clock">Đang tải giờ...</div>
   </div>
 
   <script>
-    // Cập nhật đồng hồ theo thời gian thực
+    // Load API YouTube
+    let tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    document.body.appendChild(tag);
+
+    let player;
+    function onYouTubeIframeAPIReady() {
+      player = new YT.Player('bg-video', {
+        videoId: 'EV-91JV4Fws', // ID video
+        playerVars: {
+          autoplay: 1,
+          mute: 0,     // 0 = có tiếng
+          loop: 1,
+          playlist: 'EV-91JV4Fws',
+          controls: 0,
+          showinfo: 0,
+          modestbranding: 1
+        },
+        events: {
+          'onReady': (e) => {
+            e.target.playVideo();
+            e.target.unMute();
+            e.target.setVolume(100);
+          }
+        }
+      });
+    }
+
+    // Cập nhật đồng hồ real-time
     function updateClock() {
       const now = new Date();
-      document.getElementById("clock").textContent = now.toLocaleTimeString("vi-VN");
+      document.getElementById("clock").innerText =
+        now.toLocaleTimeString("vi-VN");
     }
     setInterval(updateClock, 1000);
     updateClock();
 
-    // Load stock từ API
+    // Load stock mỗi 5s
     async function loadStock() {
       try {
-        const response = await fetch("https://ugstock-proxy.dailong581.workers.dev/");
-        const data = await response.json();
-
-        const body = document.getElementById("stock-body");
-        body.innerHTML = "";
-
-        if (data.success && data.networks.length > 0) {
-          data.networks.forEach(item => {
-            const row = document.createElement("tr");
-            row.innerHTML = `
-              <td>${item.name}</td>
-              <td>${item.status === "online" ? "🟢 Online" : "🔴 Offline"}</td>
-            `;
-            body.appendChild(row);
-          });
-        } else {
-          body.innerHTML = `<tr><td colspan="2">❌ Không có dữ liệu</td></tr>`;
-        }
-      } catch (err) {
-        document.getElementById("stock-body").innerHTML =
-          `<tr><td colspan="2">❌ Lỗi khi tải dữ liệu</td></tr>`;
+        const res = await fetch("https://ugstock-proxy.pages.dev/");
+        const data = await res.json();
+        const table = document.getElementById("stock-table");
+        table.innerHTML = "<tr><th>Server</th><th>Trạng thái</th></tr>";
+        data.networks.forEach(n => {
+          table.innerHTML += `
+            <tr>
+              <td>${n.name}</td>
+              <td class="${n.status}">${n.status.toUpperCase()}</td>
+            </tr>
+          `;
+        });
+      } catch (e) {
+        document.getElementById("stock-table").innerHTML =
+          "<tr><td colspan='2'>❌ Lỗi khi tải dữ liệu</td></tr>";
       }
     }
-    setInterval(loadStock, 5000); // update mỗi 5s
+    setInterval(loadStock, 5000);
     loadStock();
   </script>
-
 </body>
 </html>
