@@ -3,83 +3,90 @@
 <head>
   <meta charset="UTF-8">
   <title>UGPhone Stock</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #000;
+      color: #add8e6; /* Xanh dương nhạt */
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+
     /* Video nền */
     .video-background {
       position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
       overflow: hidden;
       z-index: -1;
     }
-    .video-foreground {
+    .video-foreground iframe {
       position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
       pointer-events: none;
     }
-    .video-foreground iframe {
-      width: 100%; height: 100%;
+
+    h1 {
+      margin-top: 20px;
+      font-size: 28px;
+      color: #add8e6;
+      text-shadow: 0 0 6px rgba(0, 255, 255, 0.6);
     }
 
-    /* Toàn bộ chữ */
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      color: #66ccff; /* xanh dương nhạt */
-      text-align: center;
-    }
-
-    /* Đồng hồ */
     #clock {
-      font-size: 20px;
-      margin-top: 15px;
+      font-size: 18px;
+      margin-bottom: 15px;
+      color: #87cefa;
     }
 
-    /* Bảng stock */
     table {
-      margin: 20px auto;
-      width: 400px;
+      margin: 0 auto;
       border-collapse: collapse;
-      color: #66ccff;
-      border: 1px solid #66ccff;
-      background: rgba(0,0,0,0.5);
-      border-radius: 12px;
-      box-shadow: 0 0 20px rgba(102,204,255,0.3);
+      width: 400px; /* nhỏ gọn */
+      background: rgba(0,0,0,0.6);
+      border-radius: 10px;
       overflow: hidden;
     }
-    table th, table td {
-      border: 1px solid #66ccff;
-      padding: 8px;
+
+    th, td {
+      border: 1px solid #444;
+      padding: 10px;
       text-align: center;
-    }
-    table th {
-      background: rgba(0, 102, 204, 0.3);
+      color: #add8e6;
     }
 
-    /* Nút bật nhạc */
-    #sound-btn {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background: rgba(0,0,0,0.6);
-      color: #fff;
-      border: none;
-      padding: 10px 16px;
-      border-radius: 12px;
-      font-size: 16px;
-      cursor: pointer;
-      z-index: 1000;
-      transition: background 0.3s;
+    th {
+      background: rgba(0,0,0,0.8);
+      font-size: 18px;
     }
-    #sound-btn:hover {
-      background: rgba(255,255,255,0.2);
+
+    td {
+      font-size: 16px;
+    }
+
+    .online {
+      color: #00ff00;
+      font-weight: bold;
+    }
+    .offline {
+      color: #ff4444;
+      font-weight: bold;
+    }
+
+    #error {
+      color: red;
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
-  <!-- Video nền -->
   <div class="video-background">
     <div class="video-foreground">
       <iframe src="https://www.youtube.com/embed/EV-91JV4Fws?autoplay=1&mute=1&loop=1&playlist=EV-91JV4Fws&controls=0&showinfo=0&modestbranding=1"
@@ -87,69 +94,60 @@
     </div>
   </div>
 
-  <h1>📦 Stock UGPhone</h1>
-  <div id="clock">--:--:--</div>
+  <h1>📦 UGPhone Stock</h1>
+  <div id="clock"></div>
+  <div id="error"></div>
 
-  <table id="stock-table">
+  <table>
     <thead>
       <tr>
-        <th>Tên</th>
-        <th>Số lượng</th>
+        <th>Quốc gia</th>
         <th>Trạng thái</th>
       </tr>
     </thead>
-    <tbody>
-      <tr><td colspan="3">⏳ Đang tải...</td></tr>
-    </tbody>
+    <tbody id="stock-body"></tbody>
   </table>
 
-  <!-- Nút bật nhạc -->
-  <button id="sound-btn">🔊 Bật nhạc</button>
-
   <script>
-    // Đồng hồ realtime
+    // Đồng hồ
     function updateClock() {
       const now = new Date();
-      document.getElementById("clock").innerText = 
-        now.toLocaleTimeString("vi-VN");
+      const timeStr = now.toLocaleTimeString("vi-VN");
+      document.getElementById("clock").innerText = timeStr;
     }
     setInterval(updateClock, 1000);
     updateClock();
 
-    // Load stock API
+    // Load Stock
     async function loadStock() {
       try {
-        const response = await fetch("https://ugstock-proxy.dailong581.workers.dev/");
-        const data = await response.json();
-        const tbody = document.querySelector("#stock-table tbody");
-        tbody.innerHTML = "";
+        const res = await fetch("https://ugstock-proxy.dailong581.workers.dev/");
+        const data = await res.json();
+        const body = document.getElementById("stock-body");
+        const errorDiv = document.getElementById("error");
 
-        data.forEach(item => {
-          const row = document.createElement("tr");
-          row.innerHTML = `
-            <td>${item.name}</td>
-            <td>${item.stock}</td>
-            <td>${item.status}</td>
-          `;
-          tbody.appendChild(row);
-        });
+        body.innerHTML = "";
+        errorDiv.innerText = "";
+
+        if (data.success && data.networks) {
+          data.networks.forEach(net => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${net.name}</td>
+              <td class="${net.status}">${net.status === "online" ? "🟢 Online" : "🔴 Offline"}</td>
+            `;
+            body.appendChild(tr);
+          });
+        } else {
+          errorDiv.innerText = "❌ Lỗi khi tải dữ liệu";
+        }
       } catch (e) {
-        document.querySelector("#stock-table tbody").innerHTML =
-          `<tr><td colspan="3">❌ Lỗi khi tải dữ liệu</td></tr>`;
+        document.getElementById("error").innerText = "❌ Lỗi khi tải dữ liệu";
       }
     }
-    setInterval(loadStock, 5000);
-    loadStock();
 
-    // Bật nhạc
-    const btn = document.getElementById("sound-btn");
-    btn.addEventListener("click", () => {
-      document.querySelector(".video-foreground").innerHTML = `
-        <iframe src="https://www.youtube.com/embed/EV-91JV4Fws?autoplay=1&mute=0&loop=1&playlist=EV-91JV4Fws&controls=0&showinfo=0&modestbranding=1"
-          frameborder="0" allow="autoplay; fullscreen"></iframe>
-      `;
-      btn.style.display = "none";
-    });
+    loadStock();
+    setInterval(loadStock, 5000);
   </script>
 </body>
 </html>
