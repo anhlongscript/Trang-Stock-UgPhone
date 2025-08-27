@@ -42,17 +42,18 @@ function onYouTubeIframeAPIReady() {
     width: '100%',
     videoId: 'Sas3Tw_FpnA',
     playerVars: { 
-      controls:0, 
-      loop:1, 
-      playlist:'Sas3Tw_FpnA', 
-      modestbranding:1, 
-      showinfo:0, 
-      autoplay:1 
+      controls: 0, 
+      loop: 1, 
+      playlist:'Sas3Tw_FpnA',
+      modestbranding: 1,
+      showinfo: 0,
+      autoplay: 1,
+      playsinline: 1
     },
     events: { 
       'onReady': e => {
         e.target.mute(); 
-        e.target.playVideo(); // auto play
+        e.target.playVideo();
       }
     }
   });
@@ -79,25 +80,35 @@ async function loadStock() {
     const res = await fetch('https://meows.io.vn/api/ugphone-status');
     const data = await res.json();
     const tbody = document.querySelector('#stock-table tbody');
-    tbody.innerHTML='';
+    tbody.innerHTML = '';
+
+    // ✅ Giả sử API trả về: { success:true, status:[ {server:"SV1", status:"🟢"}, {...} ] }
     if(data.success && Array.isArray(data.status)){
-      data.status.forEach(line=>{
-        if(line.includes('Uptime') || line.includes('Trang thái')) return;
-        const parts=line.split(':'); if(parts.length<2) return;
-        const tdServer=document.createElement('td'); tdServer.textContent=parts[0].trim(); tdServer.className='server';
+      data.status.forEach(item=>{
+        const tr=document.createElement('tr');
+
+        const tdServer=document.createElement('td'); 
+        tdServer.textContent=item.server || "N/A"; 
+        tdServer.className='server';
+
         const tdStatus=document.createElement('td');
-        const statusEmoji=parts[1].trim();
-        if(statusEmoji.includes('🟢')) tdStatus.textContent='🟢 Còn máy', tdStatus.className='status green';
-        else if(statusEmoji.includes('🔴')) tdStatus.textContent='🔴 Hết máy', tdStatus.className='status red';
+        if(item.status.includes('🟢')) tdStatus.textContent='🟢 Còn máy', tdStatus.className='status green';
+        else if(item.status.includes('🔴')) tdStatus.textContent='🔴 Hết máy', tdStatus.className='status red';
         else tdStatus.textContent='❌ Lỗi', tdStatus.className='status gray';
-        const tr=document.createElement('tr'); tr.appendChild(tdServer); tr.appendChild(tdStatus);
+
+        tr.appendChild(tdServer); 
+        tr.appendChild(tdStatus);
         tbody.appendChild(tr);
       });
+    } else {
+      console.warn("API không đúng format:", data);
     }
-  }catch(err){ console.error('Không thể load stock',err);}
+  }catch(err){ 
+    console.error('Không thể load stock',err);
+  }
 }
 loadStock();
-setInterval(loadStock,1000);
+setInterval(loadStock, 2000);
 </script>
 
 </body>
