@@ -41,11 +41,18 @@ function onYouTubeIframeAPIReady() {
     height: '100%',
     width: '100%',
     videoId: 'Sas3Tw_FpnA',
-    playerVars: { controls:0, loop:1, playlist:'Sas3Tw_FpnA', modestbranding:1, showinfo:0, autoplay:1 },
+    playerVars: { 
+      controls:0, 
+      loop:1, 
+      playlist:'Sas3Tw_FpnA', 
+      modestbranding:1, 
+      showinfo:0, 
+      autoplay:1 
+    },
     events: { 
       'onReady': e => {
         e.target.mute(); 
-        e.target.playVideo(); // tự động chạy
+        e.target.playVideo(); // auto play
       }
     }
   });
@@ -54,8 +61,14 @@ function onYouTubeIframeAPIReady() {
 // Bật/tắt âm thanh
 document.getElementById('toggle-sound').onclick = () => {
   if(!player) return;
-  if(player.isMuted()){ player.unMute(); document.getElementById('toggle-sound').innerText='🔇 Tắt tiếng'; }
-  else{ player.mute(); document.getElementById('toggle-sound').innerText='🔊 Bật tiếng'; }
+  if(player.isMuted()){ 
+    player.unMute(); 
+    document.getElementById('toggle-sound').innerText='🔇 Tắt tiếng'; 
+  }
+  else{ 
+    player.mute(); 
+    document.getElementById('toggle-sound').innerText='🔊 Bật tiếng'; 
+  }
 };
 </script>
 
