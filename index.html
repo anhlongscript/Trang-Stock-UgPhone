@@ -76,7 +76,7 @@ document.getElementById('toggle-sound').onclick = () => {
 // Stock update
 async function loadStock() {
   try{
-    const res = await fetch('https://meows.io.vn/call-ugphone-status');
+    const res = await fetch('https://meows.io.vn/api/ugphone-status');
     const data = await res.json();
     const tbody = document.querySelector('#stock-table tbody');
     tbody.innerHTML='';
