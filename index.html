@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>📦 UGPhone Stock</title>
+  <title>UGPhone Stock</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body {
@@ -10,42 +10,47 @@
       background-color: #111;
       color: #eee;
       padding: 20px;
-      text-align: center;
     }
     h1 {
       color: #0f0;
+      text-align: center;
     }
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 20px;
-      background: #222;
-      border-radius: 10px;
-      overflow: hidden;
     }
     th, td {
-      padding: 12px;
-      border: 1px solid #333;
+      border: 1px solid #444;
+      padding: 10px;
+      text-align: center;
     }
     th {
-      background: #333;
+      background-color: #222;
+    }
+    .online {
       color: #0f0;
-    }
-    tr:nth-child(even) {
-      background: #1a1a1a;
-    }
-    .status {
       font-weight: bold;
     }
-    .online { color: #0f0; }   /* 🟢 */
-    .offline { color: #f00; }  /* 🔴 */
+    .offline {
+      color: #f00;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
   <h1>📦 UGPhone Stock</h1>
-  <p>Tự động cập nhật mỗi 1 giây</p>
-
-  <div id="stock-container">Đang tải dữ liệu...</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Server</th>
+        <th>Trạng thái</th>
+      </tr>
+    </thead>
+    <tbody id="stock-container">
+      <tr><td colspan="2">Đang tải dữ liệu...</td></tr>
+    </tbody>
+  </table>
 
   <script>
     async function loadStock() {
@@ -53,39 +58,29 @@
         const response = await fetch("https://ugstock-proxy.dailong581.workers.dev/");
         const data = await response.json();
 
-        let html = `
-          <table>
-            <tr>
-              <th>Máy</th>
-              <th>Trạng thái</th>
-            </tr>
-        `;
+        const container = document.getElementById("stock-container");
+        container.innerHTML = "";
 
-        for (const item of data) {
-          const status = item.status === "online"
-            ? '<span class="status online">🟢 Online</span>'
-            : '<span class="status offline">🔴 Offline</span>';
-
-          html += `
-            <tr>
-              <td>${item.name}</td>
-              <td>${status}</td>
-            </tr>
+        // lấy mảng trong data.networks
+        data.networks.forEach(item => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${item.name}</td>
+            <td class="${item.status === "online" ? "online" : "offline"}">
+              ${item.status === "online" ? "🟢 Online" : "🔴 Offline"}
+            </td>
           `;
-        }
-
-        html += `</table>`;
-        document.getElementById("stock-container").innerHTML = html;
-
-      } catch (error) {
-        document.getElementById("stock-container").innerHTML = "❌ Lỗi khi tải dữ liệu";
+          container.appendChild(row);
+        });
+      } catch (err) {
+        document.getElementById("stock-container").innerHTML =
+          `<tr><td colspan="2">❌ Lỗi khi tải dữ liệu</td></tr>`;
       }
     }
 
-    // Load lần đầu
+    // load lần đầu + auto cập nhật mỗi 5 giây
     loadStock();
-    // Cập nhật mỗi 1 giây
-    setInterval(loadStock, 1000);
+    setInterval(loadStock, 5000);
   </script>
 </body>
 </html>
