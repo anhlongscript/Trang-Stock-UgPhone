@@ -1,167 +1,345 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <title>UGPhone Stock</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body, html {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      font-family: Arial, sans-serif;
-      color: white;
-      text-align: center;
-      background: #000;
-      overflow: hidden;
-    }
-
-    #bg-video {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      pointer-events: none;
-      z-index: -1;
-    }
-
-    .content {
-      position: relative;
-      z-index: 1;
-      padding: 20px;
-    }
-
-    .stock-table {
-      background: rgba(0,0,0,0.7);
-      border-radius: 12px;
-      padding: 16px;
-      margin: 20px auto;
-      width: 70%;
-      text-align: center;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    th, td {
-      padding: 10px;
-    }
-    th {
-      font-size: 18px;
-      border-bottom: 1px solid #87CEFA;
-    }
-    td {
-      font-size: 16px;
-    }
-
-    #clock {
-      font-size: 18px;
-      margin-bottom: 10px;
-    }
-
-    #sound-btn {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: bold;
-      margin-bottom: 10px;
-    }
-
-    .footer {
-      margin-top: 10px;
-      font-size: 14px;
-      opacity: 0.8;
-    }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Auto Buy UGPhone — Full (Stock + Table)</title>
+<style>
+  :root{
+    --bg:#f6fdff; --card:#fff; --text:#09364a; --muted:#6c8897;
+    --accent:#90e0ef; --accent2:#48cae4; --ok:#00c853; --warn:#ffb300; --err:#ff5252;
+    --glass: rgba(255,255,255,0.6);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:linear-gradient(180deg,#f0fbff, #eaf8ff);font-family:Inter, system-ui, Arial;color:var(--text);display:flex;align-items:center;justify-content:center;min-height:100vh;padding:18px;}
+  .card{width:min(1100px,98vw);background:var(--card);border-radius:14px;padding:18px;box-shadow:0 18px 50px rgba(8,30,40,0.12);animation:fadeIn .6s}
+  header{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  h1{margin:0;font-size:20px}
+  .clock{color:var(--muted);font-weight:700}
+  .grid{display:grid;grid-template-columns:1fr 420px;gap:14px;margin-top:14px}
+  @media (max-width:980px){ .grid{grid-template-columns:1fr} }
+  .panel{background:linear-gradient(180deg,rgba(255,255,255,0.9),#fff);padding:12px;border-radius:12px;border:1px solid rgba(13,76,102,0.04)}
+  label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+  input,select,textarea{width:100%;padding:10px;border-radius:10px;border:2px solid #dff4fb;font-size:14px;outline:none}
+  textarea{min-height:120px;resize:vertical}
+  .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .btn{background:var(--accent);color:#002935;border:0;padding:10px 14px;border-radius:10px;font-weight:800;cursor:pointer;box-shadow:0 10px 26px rgba(72,202,228,0.25);transition:transform .12s,background .14s}
+  .btn:hover{transform:translateY(-3px);background:var(--accent2)}
+  .btn.warn{background:#ffd54f;color:#422b00;box-shadow:none}
+  .statusline{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-top:12px}
+  .chip{background:#eef9ff;padding:6px 10px;border-radius:999px;font-weight:700;color:#045b73}
+  .stock-table{margin-top:12px;border-radius:10px;overflow:auto;border:1px solid rgba(7,36,46,0.04)}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{padding:10px 12px;text-align:left;border-bottom:1px solid #f1fbff}
+  th{background:linear-gradient(90deg,#f8fdff,#eefbff);font-weight:800;color:#045b73}
+  .online{color:var(--ok);font-weight:900}
+  .offline{color:#9aaeb6}
+  .log{background:#06151b;color:#c9f6ff;padding:12px;border-radius:10px;margin-top:12px;min-height:120px;max-height:260px;overflow:auto;font-family:ui-monospace,monospace}
+  .last{color:var(--muted);font-size:13px;margin-top:8px}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+</style>
 </head>
 <body>
+  <div class="card" role="main">
+    <header>
+      <div>
+        <h1>🤖 Auto Buy UGPhone — Stock + Table</h1>
+        <div class="last" id="lastInfo">Sử dụng nguồn stock: proxy → fallback pages.dev</div>
+      </div>
+      <div style="text-align:right">
+        <div class="clock" id="clock">--:--:--</div>
+        <div class="last" id="lastUpdate">Last stock update: -</div>
+      </div>
+    </header>
 
-  <!-- Video nền -->
-  <iframe id="bg-video"
-    src="https://www.youtube.com/embed/EV-91JV4Fws?autoplay=1&mute=1&loop=1&playlist=EV-91JV4Fws&enablejsapi=1"
-    frameborder="0"
-    allow="autoplay"
-    allowfullscreen>
-  </iframe>
+    <div class="grid">
+      <!-- LEFT: controls + table -->
+      <div>
+        <div class="panel">
+          <label>Token</label>
+          <input id="token" placeholder="Dán token vào đây (ví dụ: dcad...)" />
+          <label style="margin-top:8px">Data (dán JSON.stringify(localStorage) — phải là chuỗi)</label>
+          <textarea id="data" placeholder='copy(JSON.stringify(localStorage)) → dán vào đây'></textarea>
 
-  <div class="content">
-    <h1>📦 UGPhone Stock</h1>
-    <button id="sound-btn">🔇 Bật nhạc</button>
-    <div id="clock">🕒 Đang tải đồng hồ...</div>
-    <div class="stock-table">
-      <div id="stock-container">⏳ Đang tải dữ liệu...</div>
-      <div class="footer" id="last-update">Last Update: -</div>
+          <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
+            <select id="source" style="flex:1;padding:10px;border-radius:10px;border:2px solid #dff4fb">
+              <option value="proxy" selected>Proxy JSON (ưu tiên)</option>
+              <option value="pages">trang-stock-ugphone.pages.dev (fallback)</option>
+            </select>
+            <div style="width:160px"></div>
+          </div>
+
+          <div class="controls">
+            <button id="startBtn" class="btn">▶ Bắt đầu auto-mua</button>
+            <button id="stopBtn" class="btn warn">⏸ Dừng</button>
+            <button id="testBtn" class="btn">🧪 Test stock</button>
+          </div>
+
+          <div class="statusline" style="margin-top:10px">
+            <div class="chip" id="statusChip">Trạng thái: Chờ</div>
+            <div>Online hiện tại: <b id="onlineCount">0</b></div>
+          </div>
+        </div>
+
+        <div class="panel stock-table" style="margin-top:12px">
+          <table id="stockTbl" aria-label="Stock table">
+            <thead><tr><th>Server</th><th>Trạng thái</th><th>Hành động</th></tr></thead>
+            <tbody id="stockBody"><tr><td colspan="3" style="text-align:center;color:#6c8897">Đang tải dữ liệu…</td></tr></tbody>
+          </table>
+        </div>
+
+        <div class="log" id="log" aria-live="polite"></div>
+      </div>
+
+      <!-- RIGHT: info -->
+      <div>
+        <div class="panel">
+          <h3 style="margin:6px 0 10px 0">Tùy chọn & thông tin</h3>
+          <p style="margin:6px 0;color:var(--muted)">Auto-buy khi có server <span class="online">🟢 Online</span>. Mỗi lần mua tốn 1 HCOIN.</p>
+          <p style="margin:6px 0;color:var(--muted)">Nếu API trả "vui lòng đợi XX giây" → hệ thống tự cooldown.</p>
+          <div style="margin-top:8px">
+            <label>Poll interval (ms)</label>
+            <input id="interval" type="number" value="5000" />
+          </div>
+          <div style="margin-top:8px">
+            <label>Chiến lược chọn server</label>
+            <select id="strategy">
+              <option value="first">Chọn server online đầu tiên</option>
+              <option value="random">Random giữa các server online</option>
+              <option value="priority">Ưu tiên: Singapore → Japan → Hong Kong → America → Germany</option>
+            </select>
+          </div>
+          <div style="margin-top:12px;color:var(--muted);font-size:13px">
+            <b>Lưu ý:</b> dán đúng <i>data</i> (là chuỗi), không parse lại trong ô. Ví dụ: copy(JSON.stringify(localStorage)).
+          </div>
+        </div>
+
+        <div class="panel" style="margin-top:12px">
+          <h3 style="margin:6px 0">Hướng dẫn nhanh</h3>
+          <ol style="padding-left:18px;color:var(--muted)">
+            <li>Truy cập web UGPhone, F12 → Console → <code>copy(JSON.stringify(localStorage))</code>.</li>
+            <li>Dán token + data vào ô tương ứng.</li>
+            <li>Chọn nguồn stock → Bấm <b>Start</b>.</li>
+          </ol>
+        </div>
+      </div>
     </div>
   </div>
 
-  <script>
-    // ===== Đồng hồ thời gian thực =====
-    function updateClock() {
-      const now = new Date();
-      document.getElementById("clock").textContent = "🕒 " + now.toLocaleTimeString("vi-VN");
-    }
-    setInterval(updateClock, 1000);
-    updateClock();
+<script>
+/* ================= CONFIG ================= */
+const PROXY_URL = "https://ugstock-proxy.dailong581.workers.dev/"; // ưu tiên
+const PAGES_URL = "https://trang-stock-ugphone.pages.dev/";       // fallback (HTML)
+let pollTimer = null;
+let lastOnlineSignature = "";
+let cooldownUntil = 0;
 
-    // ===== Fetch stock =====
-    async function loadStock() {
-      try {
-        const res = await fetch("https://ugstock-proxy.dailong581.workers.dev/");
-        const data = await res.json();
+/* ================= UI helpers ================= */
+const $ = id => document.getElementById(id);
+function log(msg, level="info"){
+  const el = $("log");
+  const t = new Date().toLocaleTimeString("vi-VN");
+  const row = document.createElement("div");
+  row.innerHTML = `<span style="color:#ffd;" >[${t}]</span> ${msg}`;
+  el.prepend(row);
+}
+function setChip(txt, colorClass){
+  $("statusChip").textContent = "Trạng thái: " + txt;
+}
 
-        if (!data.success) throw new Error("API trả về lỗi");
+/* ================ clock ================ */
+function updateClock(){ $("clock").textContent = new Date().toLocaleTimeString("vi-VN"); }
+setInterval(updateClock,1000); updateClock();
 
-        let html = "<table><tr><th>Quốc gia</th><th>Trạng thái</th></tr>";
-        data.networks.forEach(net => {
-          const status = net.status === "online" ? "🟢 Online" : "🔴 Offline";
-          html += `<tr><td>${net.name}</td><td>${status}</td></tr>`;
-        });
-        html += "</table>";
+/* ================ stock fetch & parse ================ */
+async function fetchStockFromProxy(){
+  const res = await fetch(PROXY_URL, {cache:"no-store"});
+  return await res.json(); // expects { success: true, networks: [{name,status}] }
+}
+async function fetchStockFromPages(){
+  const res = await fetch(PAGES_URL, {cache:"no-store"});
+  const html = await res.text();
+  // heuristic parse: look for rows containing server names and emoji 🟢
+  const servers = ["Singapore","Hong Kong","Japan","America","Germany"];
+  const list = servers.map(s => {
+    const lower = html.toLowerCase();
+    const hasName = lower.includes(s.toLowerCase());
+    const hasGreen = html.includes("🟢") || html.includes("green") || html.includes("online");
+    // crude: if server name occurs and page has green, treat as online
+    return {name:s, online: hasName && hasGreen};
+  });
+  return { success:true, networks: list };
+}
 
-        document.getElementById("stock-container").innerHTML = html;
+/* normalize names */
+function normalizeServerName(n){
+  const m = n.toLowerCase();
+  if(m.includes("sing")) return "Singapore";
+  if(m.includes("hong")||m.includes("hk")) return "Hong Kong";
+  if(m.includes("jap")) return "Japan";
+  if(m.includes("amer")||m.includes("us")) return "America";
+  if(m.includes("germ")||m.includes("de")) return "Germany";
+  return n;
+}
 
-        // Cập nhật Last Update khi fetch thành công
-        const now = new Date();
-        document.getElementById("last-update").textContent = "Last Update: " + now.toLocaleString("vi-VN");
-
-      } catch (err) {
-        document.getElementById("stock-container").innerHTML = "❌ Lỗi khi tải dữ liệu";
+/* fetch stock with fallback */
+async function getStock(){
+  const source = $("source").value;
+  try{
+    if(source === "proxy"){
+      try{
+        const d = await fetchStockFromProxy();
+        if(d && d.success && d.networks) return d;
+        // fallback automatically
+      }catch(e){
+        log("Proxy fetch fail: " + (e.message||e));
       }
+      // fallback to pages
+      const d2 = await fetchStockFromPages();
+      return d2;
+    }else{
+      // force pages
+      return await fetchStockFromPages();
     }
-    setInterval(loadStock, 5000); // fetch mỗi 5 giây
-    loadStock();
+  }catch(e){
+    log("Fetch stock error: " + (e.message||e));
+    return { success:false, networks: [] };
+  }
+}
 
-    // ===== Nút bật/tắt nhạc =====
-    let isMuted = true;
-    const btn = document.getElementById("sound-btn");
-    const iframe = document.getElementById("bg-video");
+/* render table */
+function renderStockTable(networks){
+  const tbody = $("stockBody");
+  tbody.innerHTML = "";
+  if(!networks || networks.length===0){
+    tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;color:#6c8897">Không có dữ liệu</td></tr>`;
+    return;
+  }
+  networks.forEach(n=>{
+    const tr = document.createElement("tr");
+    const nameTd = document.createElement("td");
+    nameTd.textContent = n.name;
+    const statusTd = document.createElement("td");
+    statusTd.innerHTML = n.online ? '<span class="online">🟢 Online</span>' : '<span class="offline">🔴 Offline</span>';
+    const actTd = document.createElement("td");
+    const buyBtn = document.createElement("button");
+    buyBtn.textContent = "Mua (test)";
+    buyBtn.className = "btn";
+    buyBtn.style.padding="6px 10px";
+    buyBtn.onclick = () => buyOnce(normalizeServerName(n.name));
+    actTd.appendChild(buyBtn);
+    tr.appendChild(nameTd); tr.appendChild(statusTd); tr.appendChild(actTd);
+    tbody.appendChild(tr);
+  });
+}
 
-    // Thêm YouTube Iframe API
-    var tag = document.createElement('script');
-    tag.src = "https://www.youtube.com/iframe_api";
-    var firstScriptTag = document.getElementsByTagName('script')[0];
-    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+/* ================= BUY logic ================= */
+async function buyOnce(server){
+  const token = $("token").value.trim();
+  const dataStr = $("data").value.trim();
+  if(!token){ setChip("Thiếu token"); log("Thiếu token"); return {ok:false}; }
+  if(!dataStr){ setChip("Thiếu data"); log("Thiếu data (localStorage)"); return {ok:false}; }
 
-    let player;
-    function onYouTubeIframeAPIReady() {
-      player = new YT.Player('bg-video', {
-        events: { 'onReady': () => player.mute() }
-      });
-    }
-
-    btn.addEventListener("click", () => {
-      if (player) {
-        if (isMuted) {
-          player.unMute();
-          btn.textContent = "🔊 Tắt nhạc";
-        } else {
-          player.mute();
-          btn.textContent = "🔇 Bật nhạc";
-        }
-        isMuted = !isMuted;
-      }
+  const payload = { token: token, data: dataStr, server: server };
+  log(`Gửi mua -> server ${server} ...`);
+  try{
+    const res = await fetch("https://api.nikata.fun/buy_device/buy_device_ugphone", {
+      method:"POST",
+      headers: { "Content-Type":"application/json" },
+      body: JSON.stringify(payload)
     });
-  </script>
+    const j = await res.json();
+    if(j && j.success){
+      setChip("Mua thành công");
+      log("✅ Mua thành công: " + JSON.stringify(j));
+      return {ok:true, json:j};
+    }else{
+      const msg = j && j.message ? j.message : "Không rõ";
+      log("❌ Lỗi khi mua: " + msg);
+      // nếu server yêu cầu chờ "Vui lòng đợi XX giây"
+      const m = (msg||"").match(/(\d+)\s*giây/);
+      if(m){
+        const wait = parseInt(m[1],10);
+        cooldownUntil = Date.now() + wait*1000;
+        setChip(`Cooldown ${wait}s`);
+        log(`⏳ Đặt cooldown ${wait}s`);
+      } else {
+        setChip("Lỗi mua: "+msg);
+      }
+      return {ok:false, json:j};
+    }
+  }catch(e){
+    log("❌ Lỗi mạng khi mua: " + (e.message||e));
+    setChip("Lỗi mạng");
+    return {ok:false};
+  }
+}
 
+/* ================= Loop ================= */
+async function pollOnce(){
+  if(Date.now() < cooldownUntil){
+    const left = Math.ceil((cooldownUntil - Date.now())/1000);
+    setChip(`Chờ cooldown ${left}s`);
+    return;
+  }
+  const intervalMs = parseInt($("interval").value,10) || 5000;
+  const data = await getStock();
+  const networks = (data && data.networks) ? data.networks.map(n=>({name:n.name||n.title||n, online: (n.online||String(n.status||"").toLowerCase().includes("online"))})) : [];
+  renderStockTable(networks);
+  const onlineList = networks.filter(n=>n.online).map(n=>normalizeServerName(n.name));
+  $("onlineCount").textContent = onlineList.length;
+  // update last update only if online set changed
+  const sig = onlineList.slice().sort().join("|");
+  if(sig !== lastOnlineSignature){
+    lastOnlineSignature = sig;
+    $("lastUpdate").textContent = "Last stock update: " + new Date().toLocaleString("vi-VN");
+  }
+  if(onlineList.length === 0){
+    setChip("Hiện tại ko còn máy nào nữa, chờ đi!!!");
+    log("🟡 Không có server Online");
+    return;
+  }
+  // choose server based on strategy
+  const strat = $("strategy").value;
+  let pick = onlineList[0];
+  if(strat === "random"){ pick = onlineList[Math.floor(Math.random()*onlineList.length)]; }
+  if(strat === "priority"){
+    const pri = ["Singapore","Japan","Hong Kong","America","Germany"];
+    pick = onlineList.find(s=>pri.includes(s)) || onlineList[0];
+  }
+  setChip("Tìm thấy Online: " + pick);
+  const res = await buyOnce(pick);
+  if(res.ok){
+    if(true){ // stop on success
+      stopPolling();
+    }
+  }
+}
+
+function startPolling(){
+  if(pollTimer) return;
+  const ms = parseInt($("interval").value,10) || 5000;
+  pollOnce(); // immediate
+  pollTimer = setInterval(pollOnce, ms);
+  setChip("Đang chạy");
+  log("▶ Bắt đầu auto-mua (poll every " + ms + "ms)");
+}
+function stopPolling(){
+  if(pollTimer){ clearInterval(pollTimer); pollTimer = null; }
+  setChip("Đã dừng");
+  log("⏸ Đã dừng");
+}
+
+/* ================= UI actions ================= */
+$("startBtn").addEventListener("click", startPolling);
+$("stopBtn").addEventListener("click", stopPolling);
+$("testBtn").addEventListener("click", async ()=>{
+  log("🧪 Test stock ngay");
+  await pollOnce();
+});
+
+/* init: try one fetch to populate table */
+(async ()=>{ await pollOnce(); })();
+</script>
 </body>
 </html>
