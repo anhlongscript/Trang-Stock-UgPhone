@@ -2,74 +2,116 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Stock Ugphone + Quick Login</title>
+  <title>Ugphone Stock</title>
   <style>
-    body { font-family: monospace; background:#111; color:#0f0; }
-    table { border-collapse: collapse; width:100%; margin-top:10px; }
-    th, td { border:1px solid #0f0; padding:6px; text-align:center; }
-    input, button, textarea { background:#000; color:#0f0; border:1px solid #0f0; padding:5px; margin:3px; }
-    .box { border:1px dashed #0f0; padding:10px; margin-top:20px; }
-    .code { background:#000; color:#0f0; border:1px solid #0f0; padding:8px; margin-top:8px; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #0d1117;
+      color: #c9d1d9;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #3fb950;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #161b22;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 0 15px rgba(0,255,0,0.2);
+    }
+    th, td {
+      padding: 12px;
+      text-align: center;
+      border-bottom: 1px solid #30363d;
+    }
+    th {
+      background: #21262d;
+      color: #3fb950;
+    }
+    tr:hover {
+      background: #1f6feb33;
+    }
+    button {
+      background: #238636;
+      border: none;
+      color: white;
+      padding: 8px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    button:hover {
+      background: #2ea043;
+    }
+    .footer {
+      margin-top: 20px;
+      text-align: center;
+    }
+    .footer button {
+      font-size: 16px;
+      padding: 12px 20px;
+    }
   </style>
 </head>
 <body>
-  <h2>📱 Stock Ugphone</h2>
-
-  <table id="stock">
+  <h1>📱 Ugphone Stock</h1>
+  <table>
     <thead>
-      <tr><th>Server</th><th>Trạng thái</th><th>Mua</th></tr>
+      <tr>
+        <th>ID</th>
+        <th>Cloud</th>
+        <th>Giới hạn</th>
+        <th>Giá</th>
+        <th>Hành động</th>
+      </tr>
     </thead>
-    <tbody></tbody>
+    <tbody id="stock-body">
+      <!-- Dữ liệu sẽ render ở đây -->
+    </tbody>
   </table>
 
-  <div class="box">
-    <h3>🔑 Quick Login Ugphone</h3>
-    <label>Nhập Local Storage JSON:</label><br>
-    <textarea id="jsonInput" rows="6" cols="70" placeholder='Dán JSON vào đây...'></textarea><br>
-    <button onclick="makeCode()">Tạo Code</button>
-
-    <div id="resultBox" style="display:none;">
-      <p>✅ Code nhập Local Storage!:</p>
-      <pre class="code" id="resultCode"></pre>
-    </div>
+  <div class="footer">
+    <button onclick="quickLogin()">⚡ Quick Login Ugphone</button>
   </div>
 
   <script>
+    // Data demo (thay bằng fetch API thật)
     const stockData = [
-      { server:"UG-A", status:"Còn" },
-      { server:"UG-B", status:"Hết" },
-      { server:"UG-C", status:"Còn" },
+      {id: "861723", cloud: "Vsphone", limit: "7h + 2h", price: "8$"},
+      {id: "337674", cloud: "Vsphone", limit: "7h + 2h", price: "8$"},
     ];
 
-    function renderStock() {
-      const tbody = document.querySelector("#stock tbody");
-      tbody.innerHTML = "";
-      stockData.forEach(s => {
+    function renderTable() {
+      const body = document.getElementById("stock-body");
+      body.innerHTML = "";
+      stockData.forEach(item => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td>${s.server}</td>
-          <td>${s.status}</td>
-          <td><button onclick="buyOnce('${s.server}')">Mua</button></td>
+          <td>${item.id}</td>
+          <td>${item.cloud}</td>
+          <td>${item.limit}</td>
+          <td>${item.price}</td>
+          <td><button onclick="buyItem('${item.id}')">Mua</button></td>
         `;
-        tbody.appendChild(tr);
+        body.appendChild(tr);
       });
     }
 
-    async function buyOnce(server) {
-      alert("📡 Gửi yêu cầu mua " + server + " (demo payload Ugphone)");
-      // 👉 ở đây bạn thay bằng fetch API thực của Ugphone
+    function buyItem(id) {
+      alert("Bạn đã mua Ugphone ID: " + id);
+      // fetch("/api/buy-cloud-phone", {method:"POST", body: JSON.stringify({id})})
     }
 
-    function makeCode() {
-      const json = document.getElementById("jsonInput").value.trim();
-      if (!json) return alert("Dán JSON trước!");
-      const b64 = btoa(json);
-      const code = `fetch(atob('${b64}')).then(r=>r.json()).then(data=>{for(let k in data){localStorage.setItem(k,typeof data[k]=="object"?JSON.stringify(data[k]):data[k])}});`;
-      document.getElementById("resultCode").textContent = code;
-      document.getElementById("resultBox").style.display = "block";
+    function quickLogin() {
+      alert("Quick Login Ugphone thành công!");
+      // fetch("/api/quick-login", {method:"POST"})
     }
 
-    renderStock();
+    renderTable();
   </script>
 </body>
 </html>
