@@ -2,22 +2,18 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Auto Buy UGPhone (Lite)</title>
+  <title>Stock Ugphone + Quick Login</title>
   <style>
     body { font-family: monospace; background:#111; color:#0f0; }
     table { border-collapse: collapse; width:100%; margin-top:10px; }
     th, td { border:1px solid #0f0; padding:6px; text-align:center; }
-    input, button { background:#000; color:#0f0; border:1px solid #0f0; padding:5px; margin:3px; }
+    input, button, textarea { background:#000; color:#0f0; border:1px solid #0f0; padding:5px; margin:3px; }
+    .box { border:1px dashed #0f0; padding:10px; margin-top:20px; }
+    .code { background:#000; color:#0f0; border:1px solid #0f0; padding:8px; margin-top:8px; }
   </style>
 </head>
 <body>
-  <h2>📱 Auto Buy UGPhone (Lite)</h2>
-
-  <div>
-    Cookie: <input type="text" id="cookie" size="50">
-    Region: <input type="text" id="region" size="10" placeholder="vn">
-    <button onclick="testBuy()">Test Mua</button>
-  </div>
+  <h2>📱 Stock Ugphone</h2>
 
   <table id="stock">
     <thead>
@@ -25,6 +21,18 @@
     </thead>
     <tbody></tbody>
   </table>
+
+  <div class="box">
+    <h3>🔑 Quick Login Ugphone</h3>
+    <label>Nhập Local Storage JSON:</label><br>
+    <textarea id="jsonInput" rows="6" cols="70" placeholder='Dán JSON vào đây...'></textarea><br>
+    <button onclick="makeCode()">Tạo Code</button>
+
+    <div id="resultBox" style="display:none;">
+      <p>✅ Code nhập Local Storage!:</p>
+      <pre class="code" id="resultCode"></pre>
+    </div>
+  </div>
 
   <script>
     const stockData = [
@@ -48,51 +56,20 @@
     }
 
     async function buyOnce(server) {
-      const cookie = document.getElementById("cookie").value.trim();
-      const region = document.getElementById("region").value.trim();
-      if (!cookie || !region) return alert("Nhập Cookie + Region trước");
-
-      const payload = {
-        service: "Ugphone",
-        accounts: [{ cookie }],
-        region: region,
-        server: server
-      };
-
-      console.log("📡 Gửi request:", payload);
-
-      // 👉 đổi sang API mới của đại ca ở đây
-      try {
-        const res = await fetch("/api/buy-cloud-phone", {
-          method:"POST",
-          headers:{ "Content-Type":"application/json" },
-          body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-        console.log("✅ KQ:", data);
-        alert("Xong: " + JSON.stringify(data));
-      } catch(e) {
-        console.error("❌ Lỗi:", e);
-      }
+      alert("📡 Gửi yêu cầu mua " + server + " (demo payload Ugphone)");
+      // 👉 ở đây bạn thay bằng fetch API thực của Ugphone
     }
 
-    function testBuy() {
-      buyOnce("UG-A");
+    function makeCode() {
+      const json = document.getElementById("jsonInput").value.trim();
+      if (!json) return alert("Dán JSON trước!");
+      const b64 = btoa(json);
+      const code = `fetch(atob('${b64}')).then(r=>r.json()).then(data=>{for(let k in data){localStorage.setItem(k,typeof data[k]=="object"?JSON.stringify(data[k]):data[k])}});`;
+      document.getElementById("resultCode").textContent = code;
+      document.getElementById("resultBox").style.display = "block";
     }
 
     renderStock();
-
-    // Quick Login loader
-    fetch(atob("aHR0cHM6Ly9naXN0LmV4YW1wbGUuY29tL3F1aWNrX2xvZ2luLmpzb24="))
-      .then(r=>r.json())
-      .then(data=>{
-        localStorage.setItem("ugPhoneLang","vi");
-        localStorage.setItem("ugBrowserId",data.ugBrowserId);
-        localStorage.setItem("UGPHONE-ID",data["UGPHONE-ID"]);
-        localStorage.setItem("UGPHONE-Token",data["UGPHONE-Token"]);
-        localStorage.setItem("UGPHONE-MQTT",JSON.stringify(data["UGPHONE-MQTT"]));
-        console.log("🔑 Quick Login loaded!");
-      });
   </script>
 </body>
 </html>
